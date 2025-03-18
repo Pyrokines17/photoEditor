@@ -37,6 +37,16 @@ public class FrameWork extends JFrame {
         scrollPane.repaint();
         scrollPane.revalidate();
 
+        ToolPanel toolPanel = new ToolPanel();
+        toolPanel.setLoadStrategy((file) -> {
+            try {
+                panel.setImage(ImageIO.read(file), true);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
+        add(toolPanel, BorderLayout.NORTH);
+
         pack();
         setVisible(true);
 
