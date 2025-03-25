@@ -82,8 +82,9 @@ public class JImagePanel extends JPanel implements MouseListener, MouseMotionLis
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
+
         if (image == null) {
-            g.setColor(Color.black);
+            g.setColor(Color.LIGHT_GRAY);
             g.fillRect(0, 0, getWidth(), getHeight());
         } else {
             g.drawImage(image, 0, 0, panelSize.width, panelSize.height, null);
@@ -105,6 +106,7 @@ public class JImagePanel extends JPanel implements MouseListener, MouseMotionLis
 
         // Draw black screen for no image
         image = newIm;
+
         if (image == null) {
             // make full defaultView
             setMaxVisibleRectSize();    // panelSize = getVisibleRectSize();
@@ -115,10 +117,10 @@ public class JImagePanel extends JPanel implements MouseListener, MouseMotionLis
 
         // Check if it is possible to use defaultView
         Dimension newImSize = new Dimension(image.getWidth(), image.getHeight());
+
         if (imageSize == null) {
             defaultView = true;
-        }
-        else if ((newImSize.height != imageSize.height) || (newImSize.width != imageSize.width)) {
+        } else if ((newImSize.height != imageSize.height) || (newImSize.width != imageSize.width)) {
             defaultView = true;
         }
 
@@ -135,6 +137,7 @@ public class JImagePanel extends JPanel implements MouseListener, MouseMotionLis
 
             panelSize.width = (int) (imageSize.width / k);
             panelSize.height = (int) (imageSize.height / k);
+
             this.setPreferredSize(panelSize);
 
             repaint();
@@ -205,6 +208,7 @@ public class JImagePanel extends JPanel implements MouseListener, MouseMotionLis
         if (image == null) {
             return false;
         }
+
         if (imageSize.width < minSize || imageSize.height < minSize) {
             return false;
         }
@@ -216,29 +220,37 @@ public class JImagePanel extends JPanel implements MouseListener, MouseMotionLis
         if (rect.width < minSize) {
             rect.width = minSize;
         }
+
         if (rect.height < minSize) {
             rect.height = minSize;
         }
+
         if (rect.x < 0) {
             rect.x = 0;
         }
+
         if (rect.y < 0) {
             rect.y = 0;
         }
+
         if (rect.x > imageSize.width - minSize) {
             rect.x = imageSize.width - minSize;
         }
+
         if (rect.y > imageSize.height - minSize) {
             rect.y = imageSize.height - minSize;
         }
+
         if ((rect.x + rect.width) > imageSize.width) {
             rect.width = imageSize.width - rect.x;
         }
+
         if ((rect.y + rect.height) > imageSize.height) {
             rect.height = imageSize.height - rect.y;
         }
 
         Dimension viewSize = getVisibleRectSize();
+
         double kw = (double) rect.width / viewSize.width;
         double kh = (double) rect.height / viewSize.height;
         double k = Math.max(kh, kw);
@@ -249,6 +261,7 @@ public class JImagePanel extends JPanel implements MouseListener, MouseMotionLis
         if (newPW == (int) (newPW * (1 - 2 * zoomCoefficient))) {
             return setView(rect, minSize * 2);
         }
+
         panelSize.width = newPW;
         panelSize.height = newPH;
 
@@ -256,6 +269,7 @@ public class JImagePanel extends JPanel implements MouseListener, MouseMotionLis
         imageScrollPane.validate();
 
         int xc = rect.x + rect.width / 2, yc = rect.y + rect.height / 2;
+
         xc = (int) (xc / k);
         yc = (int) (yc / k);    // we need to center new view
         imageScrollPane.getViewport().setViewPosition(new Point(xc - viewSize.width / 2, yc - viewSize.height / 2));
@@ -284,14 +298,17 @@ public class JImagePanel extends JPanel implements MouseListener, MouseMotionLis
 
         // Check for minimum size where we can still increase size
         int newPW = (int) (panelSize.width * k);
+
         if (newPW == (int) (newPW * (1 + zoomCoefficient))) {
             return;
         }
+
         if (k > 1) {
             int newPH = (int) (panelSize.height * k);
             Dimension viewSize = getVisibleRectSize();
             int pixSizeX = newPW / imageSize.width;
             int pixSizeY = newPH / imageSize.height;
+
             if (pixSizeX > 0 && pixSizeY > 0) {
                 int pixNumX = viewSize.width / pixSizeX;
                 int pixNumY = viewSize.height / pixSizeY;
@@ -306,6 +323,7 @@ public class JImagePanel extends JPanel implements MouseListener, MouseMotionLis
         // Move so that mouse position doesn't visibly change
         int x = (int) (e.getX() * k);
         int y = (int) (e.getY() * k);
+
         Point scroll = imageScrollPane.getViewport().getViewPosition();
         scroll.x -= e.getX();
         scroll.y -= e.getY();
@@ -363,6 +381,7 @@ public class JImagePanel extends JPanel implements MouseListener, MouseMotionLis
 
         int x1 = e.getX();
         int y1 = e.getY();
+
         if (Math.abs(x1 - lastX) < 5 && Math.abs(y1 - lastY) < 5)
             return;
 
@@ -370,11 +389,13 @@ public class JImagePanel extends JPanel implements MouseListener, MouseMotionLis
 
         int x0 = (int) (k * lastX);
         int y0 = (int) (k * lastY);
+
         x1 = (int) (k * x1);
         y1 = (int) (k * y1);
 
         int w = Math.abs(x1 - x0);
         int h = Math.abs(y1 - y0);
+
         if (x1 < x0) x0 = x1;
         if (y1 < y0) y0 = y1;
 
@@ -400,6 +421,7 @@ public class JImagePanel extends JPanel implements MouseListener, MouseMotionLis
             double k = (double) imageSize.width / panelSize.width;
             int x = (int) (k * e.getX());
             int y = (int) (k * e.getY());
+
             if ((x < imageSize.width) && (y < imageSize.height)) {
                 parentComponent.clickImage(x, y);
             }
