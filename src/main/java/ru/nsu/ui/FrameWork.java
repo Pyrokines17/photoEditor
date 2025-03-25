@@ -2,6 +2,7 @@ package ru.nsu.ui;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
+import javax.swing.border.StrokeBorder;
 import java.awt.*;
 import java.io.IOException;
 
@@ -29,6 +30,11 @@ public class FrameWork extends JFrame {
 
         JScrollPane scrollPane = new JScrollPane();
         JImagePanel panel = new JImagePanel(scrollPane, this);
+
+        scrollPane.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createEmptyBorder(4, 4, 4, 4),
+                new StrokeBorder(getDashedStroke(), Color.BLACK)
+        ));
 
         add(scrollPane, BorderLayout.CENTER);
 
@@ -66,5 +72,17 @@ public class FrameWork extends JFrame {
 
     public void clickImage(int x, int y) {
         // placeholder
+    }
+
+    private BasicStroke getDashedStroke() {
+        float[] dashPattern = {5f, 5f};
+        return new BasicStroke(
+                1,
+                BasicStroke.CAP_BUTT,
+                BasicStroke.JOIN_MITER,
+                10f,
+                dashPattern,
+                0f
+        );
     }
 }
