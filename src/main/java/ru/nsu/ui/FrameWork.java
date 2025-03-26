@@ -1,8 +1,6 @@
 package ru.nsu.ui;
 
 import ru.nsu.filters.Filter;
-import ru.nsu.filters.Negative;
-import ru.nsu.filters.Parameters;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -11,7 +9,7 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 
-public class FrameWork extends JFrame {
+public class FrameWork extends JFrame implements ToolPanelEventListener {
     public static final int MIN_WINDOW_WIDTH = 640;
     public static final int MIN_WINDOW_HEIGHT = 480;
 
@@ -53,21 +51,27 @@ public class FrameWork extends JFrame {
         scrollPane.repaint();
         scrollPane.revalidate();
 
+        ToolPanel toolPanel = getToolPanel();
+
+        add(toolPanel, BorderLayout.NORTH);
+
+        pack();
+        setVisible(true);
+    }
+
+    private ToolPanel getToolPanel() {
         ToolPanel toolPanel = new ToolPanel(this);
 
         toolPanel.setLoadStrategy((file) -> {
             try {
                 originalImage = ImageIO.read(file);
                 panel.setImage(originalImage, true);
+                panel.realSize();
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
         });
-
-        add(toolPanel, BorderLayout.NORTH);
-
-        pack();
-        setVisible(true);
+        return toolPanel;
     }
 
     private void configureWindow() {
@@ -123,5 +127,17 @@ public class FrameWork extends JFrame {
                 dashPattern,
                 0f
         );
+    }
+
+    @Override
+    public void onEvent(EventType eventType) {
+        switch (eventType) {
+            case REAL_SIZE_BUTTON_CLICKED -> {
+                panel.realSize();
+            }
+            case FIT_SCREEN_BUTTON_CLICKED -> {
+                panel.fitScreen();
+            }
+        }
     }
 }

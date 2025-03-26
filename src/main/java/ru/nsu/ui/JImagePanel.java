@@ -117,11 +117,8 @@ public class JImagePanel extends JPanel implements MouseListener, MouseMotionLis
 
         // Check if it is possible to use defaultView
         Dimension newImSize = new Dimension(image.getWidth(), image.getHeight());
-
-        if (imageSize == null) {
-            defaultView = true;
-        } else if ((newImSize.height != imageSize.height) || (newImSize.width != imageSize.width)) {
-            defaultView = true;
+        if (defaultView) {
+            defaultView = canSetDefaultView(newImSize);
         }
 
         imageSize = newImSize;
@@ -149,6 +146,13 @@ public class JImagePanel extends JPanel implements MouseListener, MouseMotionLis
             imageScrollPane.paintAll(imageScrollPane.getGraphics());
         }
 
+    }
+
+    private boolean canSetDefaultView(Dimension newImSize) {
+        if (imageSize == null) {
+            return true;
+        }
+        return (newImSize.height != imageSize.height) || (newImSize.width != imageSize.width);
     }
 
     /**
