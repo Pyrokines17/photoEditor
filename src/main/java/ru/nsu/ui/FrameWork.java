@@ -51,7 +51,18 @@ public class FrameWork extends JFrame {
         scrollPane.repaint();
         scrollPane.revalidate();
 
-        ToolPanel toolPanel = new ToolPanel(this);
+        MenuPanel menuPanel = new MenuPanel(this);
+        setJMenuBar(menuPanel);
+
+        ToolPanel toolPanel = getToolPanel(menuPanel);
+        add(toolPanel, BorderLayout.NORTH);
+
+        pack();
+        setVisible(true);
+    }
+
+    private ToolPanel getToolPanel(MenuPanel menuPanel) {
+        ToolPanel toolPanel = new ToolPanel(this, menuPanel);
 
         toolPanel.setSavingStrategy((file, format) -> {
             BufferedImage curImage = panel.getCurrentImage();
@@ -78,10 +89,7 @@ public class FrameWork extends JFrame {
             }
         });
 
-        add(toolPanel, BorderLayout.NORTH);
-
-        pack();
-        setVisible(true);
+        return toolPanel;
     }
 
     private void configureWindow() {
