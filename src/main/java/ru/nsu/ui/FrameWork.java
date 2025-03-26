@@ -53,10 +53,26 @@ public class FrameWork extends JFrame {
 
         ToolPanel toolPanel = new ToolPanel(this);
 
+        toolPanel.setSavingStrategy((file, format) -> {
+            BufferedImage curImage = panel.getCurrentImage();
+
+            if (curImage == null) {
+                JOptionPane.showMessageDialog(this, "No image to save", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            try {
+                ImageIO.write(panel.getCurrentImage(), format, file);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
+
         toolPanel.setLoadStrategy((file) -> {
             try {
                 originalImage = ImageIO.read(file);
                 panel.setImage(originalImage, true);
+                delFilter();
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -90,10 +106,7 @@ public class FrameWork extends JFrame {
             panel.setImage(originalImage, true);
             filterApplied = false;
         } else {
-            if (filteredImage == null) {
-                filteredImage = filter.apply();
-            }
-
+            filteredImage = filter.apply(originalImage, x, y);
             panel.setImage(filteredImage, true);
             filterApplied = true;
         }
@@ -105,10 +118,7 @@ public class FrameWork extends JFrame {
 
     public void delFilter() {
         filteredImage = null;
-    }
-
-    public BufferedImage getOriginalImage() {
-        return originalImage;
+        filterApplied = false;
     }
 
     private BasicStroke getDashedStroke() {
