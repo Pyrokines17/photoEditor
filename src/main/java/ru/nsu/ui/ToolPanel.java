@@ -1,6 +1,10 @@
 package ru.nsu.ui;
 
+import ru.nsu.filters.Negative;
+import ru.nsu.filters.Parameters;
+
 import javax.swing.*;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -13,7 +17,7 @@ public class ToolPanel extends JToolBar {
 
     private final JFrame parent;
 
-    public ToolPanel(JFrame parent) {
+    public ToolPanel(FrameWork parent) {
         super();
 
         this.parent = parent;
@@ -21,8 +25,23 @@ public class ToolPanel extends JToolBar {
         JButton saveButton = getSaveButton();
         JButton loadButton = getLoadButton();
 
+        JButton negativeButton = new JButton("Negative");
+
+        negativeButton.addActionListener(notUsed -> {
+            BufferedImage originalImage = parent.getOriginalImage();
+
+            if (originalImage == null) {
+                JOptionPane.showMessageDialog(parent, "No image to apply filter", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            parent.setFilter(new Negative(new Parameters(parent.getOriginalImage())));
+        });
+
         add(saveButton);
         add(loadButton);
+
+        add(negativeButton);
     }
 
     private JButton getSaveButton() {

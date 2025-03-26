@@ -1,9 +1,13 @@
 package ru.nsu.filters;
 
-public abstract class Filter {
-    Filter() {
+import java.awt.image.BufferedImage;
 
+public abstract class Filter {
+    public Parameters parameters;
+
+    Filter(Parameters parameters) {
+        this.parameters = parameters;
     }
 
-    public abstract void apply();
+    public abstract BufferedImage apply();
 }

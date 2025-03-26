@@ -125,7 +125,6 @@ public class JImagePanel extends JPanel implements MouseListener, MouseMotionLis
         }
 
         imageSize = newImSize;
-
         panelSize = getVisibleRectSize();
 
         if (defaultView) {
@@ -403,7 +402,6 @@ public class JImagePanel extends JPanel implements MouseListener, MouseMotionLis
         setView(rect);
     }
 
-
     /**
      * Process image click and call parent's methods
      */
@@ -412,7 +410,7 @@ public class JImagePanel extends JPanel implements MouseListener, MouseMotionLis
         if ((e.getModifiersEx() == InputEvent.BUTTON2_DOWN_MASK) || (e.getModifiersEx() == InputEvent.BUTTON3_DOWN_MASK))
             parentComponent.changeViewedImage();
 
-        if (e.getModifiersEx() == InputEvent.BUTTON1_DOWN_MASK) {
+        if (e.getModifiersEx() == InputEvent.SHIFT_DOWN_MASK) {
             if (imageSize == null) {
                 parentComponent.clickImage(e.getX(), e.getY());
                 return;

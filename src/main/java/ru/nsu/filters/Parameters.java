@@ -1,4 +1,6 @@
 package ru.nsu.filters;
 
-public record Parameters() {
+import java.awt.image.BufferedImage;
+
+public record Parameters(BufferedImage image) {
 }
