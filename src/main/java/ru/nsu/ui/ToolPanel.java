@@ -35,7 +35,7 @@ public class ToolPanel extends JToolBar {
                 return;
             }
 
-            parent.setFilter(new Negative(new Parameters(parent.getOriginalImage())));
+            parent.setFilter(new Negative(new Parameters(parent.getOriginalImage(), null)));
         });
 
         add(saveButton);

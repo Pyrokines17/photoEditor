@@ -1,8 +1,6 @@
 package ru.nsu.ui;
 
 import ru.nsu.filters.Filter;
-import ru.nsu.filters.Negative;
-import ru.nsu.filters.Parameters;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
