@@ -1,25 +1,18 @@
 package ru.nsu.filters;
 
-import java.awt.image.BufferedImage;
 import java.util.HashMap;
 
 public class Parameters {
-    private final BufferedImage image;
     private final HashMap<String, String> types;
 
     private final HashMap<String, Integer> intParams;
     private final HashMap<String, Double> doubleParams;
 
-    public Parameters(BufferedImage image, HashMap<String, String> types) {
-        this.image = image;
+    public Parameters(HashMap<String, String> types) {
         this.types = types;
 
         intParams = new HashMap<>();
         doubleParams = new HashMap<>();
-    }
-
-    public BufferedImage getImage() {
-        return image;
     }
 
     public HashMap<String, String> getTypes() {

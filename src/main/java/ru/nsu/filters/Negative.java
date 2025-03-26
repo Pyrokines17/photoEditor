@@ -8,8 +8,7 @@ public class Negative extends Filter {
     }
 
     @Override
-    public BufferedImage apply() {
-        BufferedImage image = parameters.getImage();
+    public BufferedImage apply(BufferedImage image, int x, int y) {
         BufferedImage newImage = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_RGB);
 
         for (int i = 0; i < image.getWidth(); i++) {
