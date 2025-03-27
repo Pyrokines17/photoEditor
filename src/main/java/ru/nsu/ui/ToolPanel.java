@@ -5,8 +5,11 @@ import ru.nsu.filters.FilterSwitch;
 import ru.nsu.filters.Parameters;
 
 import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
+import java.awt.*;
 import java.awt.event.ItemEvent;
 import java.io.File;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -23,6 +26,9 @@ public class ToolPanel extends JToolBar {
     private BiConsumer<File, String> savingStrategy;
     private Consumer<File> loadStrategy;
 
+    private final static String ICON_PATH = "icons/";
+    private final static Integer ICON_SIZE = 20;
+
     public ToolPanel(FrameWork parent, MenuPanel menuPanel) {
         super();
 
@@ -34,11 +40,14 @@ public class ToolPanel extends JToolBar {
         add(saveButton);
         add(loadButton);
 
+        addFilterButton(FilterList.GRAYSCALE, "Grayscale", menuPanel);
         addFilterButton(FilterList.NEGATIVE, "Negative", menuPanel);
     }
 
     private void addFilterButton(FilterList filter, String name, MenuPanel menuPanel) {
-        JToggleButton button = new JToggleButton(name);
+        String lowerName = name.toLowerCase();
+        String path = ICON_PATH + lowerName + ".png";
+        JToggleButton button = getToggleButton(name, path);
         int index = toggleButtons.size();
 
         toggleGroup.add(button);
@@ -54,9 +63,22 @@ public class ToolPanel extends JToolBar {
             }
         });
 
-        button.setToolTipText("Apply " + name + " filter");
+        button.setToolTipText("Apply " + lowerName + " filter");
 
         menuPanel.addRadioButton(filter, name, this, filterAction);
+    }
+
+    private JToggleButton getToggleButton(String name, String iconPath) {
+        URL url = getClass().getClassLoader().getResource(iconPath);
+
+        if (url == null) {
+            return new JToggleButton(name);
+        }
+
+        ImageIcon icon = new ImageIcon(url);
+        Image image = icon.getImage().getScaledInstance(ICON_SIZE, ICON_SIZE, Image.SCALE_SMOOTH);
+
+        return new JToggleButton(new ImageIcon(image));
     }
 
     private Consumer<FilterList> getFilterAction() {
@@ -69,6 +91,7 @@ public class ToolPanel extends JToolBar {
             }
 
             parent.setFilter(FilterSwitch.getFilter(filter, parameters));
+            parent.delFiltered();
         };
     }
 
@@ -100,6 +123,10 @@ public class ToolPanel extends JToolBar {
                 JOptionPane.showMessageDialog(parent, "Loading error", "Internal error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
+
+            FileNameExtensionFilter filter = new FileNameExtensionFilter("Images",
+                    "bmp", "jpeg", "png", "gif", "jpg");
+            fileChooser.setFileFilter(filter);
 
             int result = fileChooser.showOpenDialog(parent);
 

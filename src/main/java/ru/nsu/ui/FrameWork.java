@@ -83,7 +83,7 @@ public class FrameWork extends JFrame {
             try {
                 originalImage = ImageIO.read(file);
                 panel.setImage(originalImage, true);
-                delFilter();
+                delFiltered();
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -114,8 +114,10 @@ public class FrameWork extends JFrame {
             panel.setImage(originalImage, true);
             filterApplied = false;
         } else {
+            this.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
             filteredImage = filter.apply(originalImage, x, y);
             panel.setImage(filteredImage, true);
+            this.setCursor(Cursor.getDefaultCursor());
             filterApplied = true;
         }
     }
@@ -124,9 +126,13 @@ public class FrameWork extends JFrame {
         this.filter = filter;
     }
 
-    public void delFilter() {
+    public void delFiltered() {
+        if (originalImage != null && filterApplied) {
+            panel.setImage(originalImage, true);
+            filterApplied = false;
+        }
+
         filteredImage = null;
-        filterApplied = false;
     }
 
     private BasicStroke getDashedStroke() {

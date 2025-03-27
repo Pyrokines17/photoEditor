@@ -37,6 +37,7 @@ public class MenuPanel extends JMenuBar {
     }
 
     public void addRadioButton(FilterList filter, String name, ToolPanel toolPanel, Consumer<FilterList> filterAction) {
+        String lowerName = name.toLowerCase();
         JRadioButtonMenuItem radioButton = new JRadioButtonMenuItem(name);
         int index = radioButtons.size();
 
@@ -51,7 +52,7 @@ public class MenuPanel extends JMenuBar {
             }
         });
 
-        radioButton.setToolTipText("Apply " + name + " filter");
+        radioButton.setToolTipText("Apply " + lowerName + " filter");
     }
 
     public JRadioButtonMenuItem getRadioButton(int index) {

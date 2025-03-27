@@ -5,6 +5,8 @@ public class FilterSwitch {
         switch (filter) {
             case NEGATIVE:
                 return new Parameters(null);
+            case GRAYSCALE:
+                return new Parameters(null);
             default:
                 return new Parameters(null);
         }
@@ -14,6 +16,8 @@ public class FilterSwitch {
         switch (filter) {
             case NEGATIVE:
                 return new Negative(parameters);
+            case GRAYSCALE:
+                return new Grayscale(parameters);
             default:
                 return null;
         }
