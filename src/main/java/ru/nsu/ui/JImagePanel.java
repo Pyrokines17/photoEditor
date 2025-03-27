@@ -300,6 +300,10 @@ public class JImagePanel extends JPanel implements MouseListener, MouseMotionLis
             return;
         }
 
+        if (e.getModifiersEx() != InputEvent.CTRL_DOWN_MASK) {
+            return;
+        }
+
         // Zoom
         double k = 1 - e.getWheelRotation() * zoomCoefficient;
 
@@ -359,8 +363,12 @@ public class JImagePanel extends JPanel implements MouseListener, MouseMotionLis
     public void mouseDragged(MouseEvent e) {
         // Move image with mouse
 
-        if (e.getModifiersEx() == InputEvent.BUTTON3_DOWN_MASK)        // ( (e.getModifiers() & MouseEvent.BUTTON3_MASK) == 0)
+        if (!e.isControlDown()) {
             return;
+        }
+
+//        if (e.getModifiersEx() == InputEvent.BUTTON3_DOWN_MASK)        // ( (e.getModifiers() & MouseEvent.BUTTON3_MASK) == 0)
+//            return;
 
         // move picture using scroll
         Point scroll = imageScrollPane.getViewport().getViewPosition();
@@ -383,7 +391,7 @@ public class JImagePanel extends JPanel implements MouseListener, MouseMotionLis
      */
     @Override
     public void mouseReleased(MouseEvent e) {
-        if (e.getModifiersEx() != InputEvent.BUTTON3_DOWN_MASK)
+        if (!e.isAltDown())
             return;
 
         int x1 = e.getX();

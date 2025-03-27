@@ -151,12 +151,8 @@ public class FrameWork extends JFrame implements ToolPanelEventListener {
     @Override
     public void onEvent(EventType eventType) {
         switch (eventType) {
-            case REAL_SIZE_BUTTON_CLICKED -> {
-                panel.realSize();
-            }
-            case FIT_SCREEN_BUTTON_CLICKED -> {
-                panel.fitScreen();
-            }
+            case REAL_SIZE_BUTTON_CLICKED -> panel.realSize();
+            case FIT_SCREEN_BUTTON_CLICKED -> panel.fitScreen();
         }
     }
 }
