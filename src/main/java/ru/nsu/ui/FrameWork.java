@@ -9,7 +9,7 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 
-public class FrameWork extends JFrame {
+public class FrameWork extends JFrame implements ToolPanelEventListener {
     public static final int MIN_WINDOW_WIDTH = 640;
     public static final int MIN_WINDOW_HEIGHT = 480;
 
@@ -83,6 +83,7 @@ public class FrameWork extends JFrame {
             try {
                 originalImage = ImageIO.read(file);
                 panel.setImage(originalImage, true);
+                panel.realSize();
                 delFiltered();
             } catch (IOException e) {
                 throw new RuntimeException(e);
@@ -145,5 +146,17 @@ public class FrameWork extends JFrame {
                 dashPattern,
                 0f
         );
+    }
+
+    @Override
+    public void onEvent(EventType eventType) {
+        switch (eventType) {
+            case REAL_SIZE_BUTTON_CLICKED -> {
+                panel.realSize();
+            }
+            case FIT_SCREEN_BUTTON_CLICKED -> {
+                panel.fitScreen();
+            }
+        }
     }
 }

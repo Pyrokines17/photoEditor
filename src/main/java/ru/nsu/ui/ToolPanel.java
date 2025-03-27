@@ -37,6 +37,17 @@ public class ToolPanel extends JToolBar {
 
         this.menuPanel = menuPanel;
         this.parent = parent;
+      
+        JButton fitScreenButton = getButton("Fit screen", () -> {
+            parent.onEvent(ToolPanelEventListener.EventType.FIT_SCREEN_BUTTON_CLICKED);
+        });
+      
+        JButton realSizeButton = getButton("Real size", () -> {
+            parent.onEvent(ToolPanelEventListener.EventType.REAL_SIZE_BUTTON_CLICKED);
+        });
+      
+        add(fitScreenButton);
+        add(realSizeButton);
 
         JButton saveButton = getSaveButton();
         JButton loadButton = getLoadButton();
@@ -47,6 +58,14 @@ public class ToolPanel extends JToolBar {
         addFilterButton(FilterList.GRAYSCALE, "Grayscale");
         addFilterButton(FilterList.NEGATIVE, "Negative");
         addFilterButton(FilterList.GAMMA, "Gamma");
+    }
+  
+    private JButton getButton(String label, Runnable onPressAction) {
+        JButton button = new JButton(label);
+        button.addActionListener(e -> {
+            onPressAction.run();
+        });
+        return button;
     }
 
     private void addFilterButton(FilterList filter, String name) {
