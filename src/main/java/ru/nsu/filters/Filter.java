@@ -9,5 +9,5 @@ public abstract class Filter {
         this.parameters = parameters;
     }
 
-    public abstract BufferedImage apply();
+    public abstract BufferedImage apply(BufferedImage image, int x, int y);
 }

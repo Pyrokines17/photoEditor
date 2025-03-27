@@ -51,26 +51,45 @@ public class FrameWork extends JFrame implements ToolPanelEventListener {
         scrollPane.repaint();
         scrollPane.revalidate();
 
-        ToolPanel toolPanel = getToolPanel();
+        MenuPanel menuPanel = new MenuPanel(this);
+        setJMenuBar(menuPanel);
 
+        ToolPanel toolPanel = getToolPanel(menuPanel);
         add(toolPanel, BorderLayout.NORTH);
 
         pack();
         setVisible(true);
     }
 
-    private ToolPanel getToolPanel() {
-        ToolPanel toolPanel = new ToolPanel(this);
+    private ToolPanel getToolPanel(MenuPanel menuPanel) {
+        ToolPanel toolPanel = new ToolPanel(this, menuPanel);
+
+        toolPanel.setSavingStrategy((file, format) -> {
+            BufferedImage curImage = panel.getCurrentImage();
+
+            if (curImage == null) {
+                JOptionPane.showMessageDialog(this, "No image to save", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            try {
+                ImageIO.write(panel.getCurrentImage(), format, file);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
 
         toolPanel.setLoadStrategy((file) -> {
             try {
                 originalImage = ImageIO.read(file);
                 panel.setImage(originalImage, true);
                 panel.realSize();
+                delFiltered();
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
         });
+
         return toolPanel;
     }
 
@@ -96,11 +115,10 @@ public class FrameWork extends JFrame implements ToolPanelEventListener {
             panel.setImage(originalImage, true);
             filterApplied = false;
         } else {
-            if (filteredImage == null) {
-                filteredImage = filter.apply();
-            }
-
+            this.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+            filteredImage = filter.apply(originalImage, x, y);
             panel.setImage(filteredImage, true);
+            this.setCursor(Cursor.getDefaultCursor());
             filterApplied = true;
         }
     }
@@ -109,12 +127,13 @@ public class FrameWork extends JFrame implements ToolPanelEventListener {
         this.filter = filter;
     }
 
-    public void delFilter() {
-        filteredImage = null;
-    }
+    public void delFiltered() {
+        if (originalImage != null && filterApplied) {
+            panel.setImage(originalImage, true);
+            filterApplied = false;
+        }
 
-    public BufferedImage getOriginalImage() {
-        return originalImage;
+        filteredImage = null;
     }
 
     private BasicStroke getDashedStroke() {

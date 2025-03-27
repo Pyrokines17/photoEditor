@@ -91,6 +91,10 @@ public class JImagePanel extends JPanel implements MouseListener, MouseMotionLis
         }
     }
 
+    public BufferedImage getCurrentImage() {
+        return image;
+    }
+
     /**
      * Sets a new image to view.
      * If the given image is null, visible space will be painted in black.
