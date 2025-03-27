@@ -1,25 +1,28 @@
 package ru.nsu.filters;
 
+import java.util.HashMap;
+
 public class FilterSwitch {
     public static Parameters getParameters(FilterList filter) {
         switch (filter) {
-            case NEGATIVE:
-                return new Parameters(null);
-            case GRAYSCALE:
-                return new Parameters(null);
+            case GAMMA: {
+                HashMap<String, String> types = new HashMap<>();
+                types.put("gamma", "double");
+                HashMap<String, String> borders = new HashMap<>();
+                borders.put("gamma", "0.1|10.0");
+                return new Parameters(types, borders);
+            }
+            case NEGATIVE, GRAYSCALE:
             default:
-                return new Parameters(null);
+                return new Parameters(null, null);
         }
     }
 
     public static Filter getFilter(FilterList filter, Parameters parameters) {
-        switch (filter) {
-            case NEGATIVE:
-                return new Negative(parameters);
-            case GRAYSCALE:
-                return new Grayscale(parameters);
-            default:
-                return null;
-        }
+        return switch (filter) {
+            case NEGATIVE -> new Negative(parameters);
+            case GRAYSCALE -> new Grayscale(parameters);
+            case GAMMA -> new Gamma(parameters);
+        };
     }
 }

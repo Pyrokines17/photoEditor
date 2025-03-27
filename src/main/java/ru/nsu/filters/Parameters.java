@@ -4,12 +4,14 @@ import java.util.HashMap;
 
 public class Parameters {
     private final HashMap<String, String> types;
+    private final HashMap<String, String> borders;
 
     private final HashMap<String, Integer> intParams;
     private final HashMap<String, Double> doubleParams;
 
-    public Parameters(HashMap<String, String> types) {
+    public Parameters(HashMap<String, String> types, HashMap<String, String> borders) {
         this.types = types;
+        this.borders = borders;
 
         intParams = new HashMap<>();
         doubleParams = new HashMap<>();
@@ -19,22 +21,24 @@ public class Parameters {
         return types;
     }
 
-    public boolean setIntParam(String name, int value) {
+    public HashMap<String, String> getBorders() {
+        return borders;
+    }
+
+    public void setIntParam(String name, int value) {
         if (checkParam(name, "int")) {
-            return false;
+            return;
         }
 
         intParams.put(name, value);
-        return true;
     }
 
-    public boolean setDoubleParam(String name, double value) {
+    public void setDoubleParam(String name, double value) {
         if (checkParam(name, "double")) {
-            return false;
+            return;
         }
 
         doubleParams.put(name, value);
-        return true;
     }
 
     private boolean checkParam(String name, String type) {

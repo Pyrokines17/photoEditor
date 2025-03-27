@@ -3,10 +3,9 @@ package ru.nsu.ui;
 import ru.nsu.filters.FilterList;
 
 import javax.swing.*;
-import java.awt.event.ItemEvent;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 
 public class MenuPanel extends JMenuBar {
     private final ButtonGroup radioGroup = new ButtonGroup();
@@ -36,7 +35,7 @@ public class MenuPanel extends JMenuBar {
         add(helpMenu);
     }
 
-    public void addRadioButton(FilterList filter, String name, ToolPanel toolPanel, Consumer<FilterList> filterAction) {
+    public void addRadioButton(FilterList filter, String name, ToolPanel toolPanel, BiConsumer<FilterList, Integer> filterAction) {
         String lowerName = name.toLowerCase();
         JRadioButtonMenuItem radioButton = new JRadioButtonMenuItem(name);
         int index = radioButtons.size();
@@ -45,11 +44,9 @@ public class MenuPanel extends JMenuBar {
         radioButtons.add(radioButton);
         filtersMenu.add(radioButton);
 
-        radioButton.addItemListener(e -> {
-            if (e.getStateChange() == ItemEvent.SELECTED) {
-                toolPanel.getToggleButton(index).setSelected(true);
-                filterAction.accept(filter);
-            }
+        radioButton.addActionListener(e -> {
+            toolPanel.getToggleButton(index).setSelected(true);
+            filterAction.accept(filter, index);
         });
 
         radioButton.setToolTipText("Apply " + lowerName + " filter");
@@ -57,5 +54,9 @@ public class MenuPanel extends JMenuBar {
 
     public JRadioButtonMenuItem getRadioButton(int index) {
         return radioButtons.get(index);
+    }
+
+    public void clearRadioButtons() {
+        radioGroup.clearSelection();
     }
 }

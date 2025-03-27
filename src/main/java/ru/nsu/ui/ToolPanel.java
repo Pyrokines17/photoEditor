@@ -7,7 +7,6 @@ import ru.nsu.filters.Parameters;
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
-import java.awt.event.ItemEvent;
 import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
@@ -18,6 +17,7 @@ import java.util.function.Consumer;
 
 public class ToolPanel extends JToolBar {
     private final JFileChooser fileChooser = new JFileChooser();
+    private final MenuPanel menuPanel;
     private final FrameWork parent;
 
     private final ButtonGroup toggleGroup = new ButtonGroup();
@@ -29,9 +29,13 @@ public class ToolPanel extends JToolBar {
     private final static String ICON_PATH = "icons/";
     private final static Integer ICON_SIZE = 20;
 
+    private final HashMap<FilterList, Parameters> parametersHashMap = new HashMap<>();
+    private int lastSelected = -1;
+
     public ToolPanel(FrameWork parent, MenuPanel menuPanel) {
         super();
 
+        this.menuPanel = menuPanel;
         this.parent = parent;
 
         JButton saveButton = getSaveButton();
@@ -40,11 +44,12 @@ public class ToolPanel extends JToolBar {
         add(saveButton);
         add(loadButton);
 
-        addFilterButton(FilterList.GRAYSCALE, "Grayscale", menuPanel);
-        addFilterButton(FilterList.NEGATIVE, "Negative", menuPanel);
+        addFilterButton(FilterList.GRAYSCALE, "Grayscale");
+        addFilterButton(FilterList.NEGATIVE, "Negative");
+        addFilterButton(FilterList.GAMMA, "Gamma");
     }
 
-    private void addFilterButton(FilterList filter, String name, MenuPanel menuPanel) {
+    private void addFilterButton(FilterList filter, String name) {
         String lowerName = name.toLowerCase();
         String path = ICON_PATH + lowerName + ".png";
         JToggleButton button = getToggleButton(name, path);
@@ -54,13 +59,11 @@ public class ToolPanel extends JToolBar {
         toggleButtons.add(button);
         this.add(button);
 
-        Consumer<FilterList> filterAction = getFilterAction();
+        BiConsumer<FilterList, Integer> filterAction = getFilterAction();
 
-        button.addItemListener(e -> {
-            if (e.getStateChange() == ItemEvent.SELECTED) {
-                menuPanel.getRadioButton(index).setSelected(true);
-                filterAction.accept(filter);
-            }
+        button.addActionListener(e -> {
+            menuPanel.getRadioButton(index).setSelected(true);
+            filterAction.accept(filter, index);
         });
 
         button.setToolTipText("Apply " + lowerName + " filter");
@@ -81,18 +84,144 @@ public class ToolPanel extends JToolBar {
         return new JToggleButton(new ImageIcon(image));
     }
 
-    private Consumer<FilterList> getFilterAction() {
-        return (filter) -> {
+    private BiConsumer<FilterList, Integer> getFilterAction() {
+        return (filter, index) -> {
+            if (index == lastSelected) {
+                toggleGroup.clearSelection();
+                menuPanel.clearRadioButtons();
+                parent.setFilter(null);
+                parent.delFiltered();
+                lastSelected = -1;
+                return;
+            }
+
             Parameters parameters = FilterSwitch.getParameters(filter);
             HashMap<String, String> types = parameters.getTypes();
+            HashMap<String, String> borders = parameters.getBorders();
+            HashMap<String, JTextField> fields = new HashMap<>();
 
             if (types != null) {
+                JPanel dialog = new JPanel();
+                dialog.setLayout(new BoxLayout(dialog, BoxLayout.Y_AXIS));
 
+                Parameters oldParameters = parametersHashMap.get(filter);
+
+                for (String name : types.keySet()) {
+                    JPanel panel = new JPanel();
+                    panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
+                    panel.add(new JLabel("Enter "+name+": "));
+                    String type = types.get(name);
+
+                    if (type.equals("int") || type.equals("double")) {
+                        JTextField field = new JTextField();
+
+                        if (oldParameters != null) {
+                            if (type.equals("int")) {
+                                field.setText(Integer.toString(oldParameters.getIntParam(name)));
+                            } else {
+                                field.setText(Double.toString(oldParameters.getDoubleParam(name)));
+                            }
+                        }
+
+                        panel.add(field);
+                        fields.put(name, field);
+                    }
+
+                    dialog.add(panel);
+                }
+
+                boolean lastTry = false;
+
+                while (!lastTry) {
+                    lastTry = true;
+
+                    int result = JOptionPane.showConfirmDialog(parent, dialog, "Enter parameters", JOptionPane.OK_CANCEL_OPTION);
+
+                    if (result != JOptionPane.OK_OPTION) {
+                        if (lastSelected == -1) {
+                            toggleGroup.clearSelection();
+                            menuPanel.clearRadioButtons();
+                        } else {
+                            toggleButtons.get(lastSelected).setSelected(true);
+                            menuPanel.getRadioButton(lastSelected).setSelected(true);
+                        }
+
+                        return;
+                    }
+
+                    for (String name : fields.keySet()) {
+                        JTextField field = fields.get(name);
+                        String text = field.getText();
+
+                        if (text.isEmpty()) {
+                            JOptionPane.showMessageDialog(parent, "Empty field", "Error", JOptionPane.ERROR_MESSAGE);
+                            lastTry = false;
+                            break;
+                        }
+
+                        if (types.get(name).equals("int")) {
+                            try {
+                                int value = Integer.parseInt(text);
+                                if (!checkIntBorders(value, borders.get(name))) {
+                                    throw new RuntimeException();
+                                }
+                                parameters.setIntParam(name, value);
+                            } catch (NumberFormatException e) {
+                                JOptionPane.showMessageDialog(parent, "Invalid integer: "+text, "Error", JOptionPane.ERROR_MESSAGE);
+                                lastTry = false;
+                                break;
+                            } catch (RuntimeException e) {
+                                JOptionPane.showMessageDialog(parent, "Value is out of borders: "+borders.get(name), "Info", JOptionPane.INFORMATION_MESSAGE);
+                                lastTry = false;
+                                break;
+                            }
+                        } else {
+                            try {
+                                double value = Double.parseDouble(text);
+                                if (!checkDoubleBorders(value, borders.get(name))) {
+                                    throw new RuntimeException();
+                                }
+                                parameters.setDoubleParam(name, value);
+                            } catch (NumberFormatException e) {
+                                JOptionPane.showMessageDialog(parent, "Invalid double: "+text, "Error", JOptionPane.ERROR_MESSAGE);
+                                lastTry = false;
+                                break;
+                            } catch (RuntimeException e) {
+                                JOptionPane.showMessageDialog(parent, "Value is out of borders: "+borders.get(name), "Info", JOptionPane.INFORMATION_MESSAGE);
+                                lastTry = false;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                parametersHashMap.put(filter, parameters);
             }
 
             parent.setFilter(FilterSwitch.getFilter(filter, parameters));
             parent.delFiltered();
+            lastSelected = index;
         };
+    }
+
+    private boolean checkIntBorders(Integer value, String borders) {
+        if (borders == null) {
+            return true;
+        }
+
+        int min = Integer.parseInt(borders.split("\\|")[0]);
+        int max = Integer.parseInt(borders.split("\\|")[1]);
+        return value >= min && value <= max;
+    }
+
+    private boolean checkDoubleBorders(Double value, String borders) {
+        if (borders == null) {
+            return true;
+        }
+
+        double min = Double.parseDouble(borders.split("\\|")[0]);
+        double max = Double.parseDouble(borders.split("\\|")[1]);
+        return value >= min && value <= max;
     }
 
     private JButton getSaveButton() {
