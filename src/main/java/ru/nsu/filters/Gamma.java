@@ -21,13 +21,13 @@ public class Gamma extends Filter {
             changedPixels.add((int) (255 * Math.pow(i / 255.0, invGamma) + 0.5));
         }
 
-        for (int i = 0; i < image.getWidth(); i++) {
-            for (int j = 0; j < image.getHeight(); j++) {
-                int rgb = image.getRGB(i, j);
+        for (int i = 0; i < image.getHeight(); ++i) {
+            for (int j = 0; j < image.getWidth(); ++j) {
+                int rgb = image.getRGB(j, i);
                 int r = changedPixels.get((rgb >> 16) & 0xFF);
                 int g = changedPixels.get((rgb >> 8) & 0xFF);
                 int b = changedPixels.get(rgb & 0xFF);
-                newImage.setRGB(i, j, (r << 16) | (g << 8) | b);
+                newImage.setRGB(j, i, (r << 16) | (g << 8) | b);
             }
         }
 

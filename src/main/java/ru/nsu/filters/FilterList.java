@@ -4,4 +4,5 @@ public enum FilterList {
     NEGATIVE,
     GRAYSCALE,
     GAMMA,
+    ORDERED_DITHERING,
 }

@@ -12,7 +12,7 @@ public class FilterSwitch {
                 borders.put("gamma", "0.1|10.0");
                 return new Parameters(types, borders);
             }
-            case NEGATIVE, GRAYSCALE:
+            case NEGATIVE, GRAYSCALE, ORDERED_DITHERING:
             default:
                 return new Parameters(null, null);
         }
@@ -23,6 +23,7 @@ public class FilterSwitch {
             case NEGATIVE -> new Negative(parameters);
             case GRAYSCALE -> new Grayscale(parameters);
             case GAMMA -> new Gamma(parameters);
+            case ORDERED_DITHERING -> new OrderedDither(parameters);
         };
     }
 }
