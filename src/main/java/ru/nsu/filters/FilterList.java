@@ -5,4 +5,5 @@ public enum FilterList {
     GRAYSCALE,
     GAMMA,
     ORDERED_DITHERING,
+    FSDITHERING,
 }
