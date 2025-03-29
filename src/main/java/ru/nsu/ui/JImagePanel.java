@@ -35,6 +35,8 @@ public class JImagePanel extends JPanel implements MouseListener, MouseMotionLis
     private BufferedImage image;    // image to view
     private Dimension imageSize;    // real image size
 
+    private Point lastViewPoint = null;
+
     private int lastX = 0, lastY = 0;        // last captured mouse coordinates
 
     /**
@@ -98,72 +100,77 @@ public class JImagePanel extends JPanel implements MouseListener, MouseMotionLis
     /**
      * Sets a new image to view.
      * If the given image is null, visible space will be painted in black.
-     * Default view causes to "fit-screen" view.
-     * If defaultView is set to false, viewer will show the last viewed part of the previous image.
-     * But only if both of the images have the same size.
      *
      * @param newIm       - new image to view
-     * @param defaultView - view the image in the default view, or save the view on the image
+     * @param setPreviousViewPosition - view image from part witch previous image was viewed.
      */
-    public void setImage(BufferedImage newIm, boolean defaultView) {
-        // defaultView means "fit screen (panel)"
+    public void setImage(BufferedImage newIm, boolean setPreviousViewPosition) {
+
+        Rectangle previousVisibleRect = null;
+        Dimension previousPanelSize = null;
+
+        imageScrollPane.getViewport().setViewPosition(new Point(0, 0));
+
+        if (image != null && setPreviousViewPosition) {
+            previousPanelSize = new Dimension(panelSize);
+            if (lastViewPoint == null) {
+                lastViewPoint = new Point(0, 0);
+            }
+            Point viewPoint = lastViewPoint;
+
+            previousVisibleRect = new Rectangle(viewPoint.x, viewPoint.y, getVisibleRectSize().width, getVisibleRectSize().height);
+        }
 
         // Draw black screen for no image
         image = newIm;
 
         if (image == null) {
-            // make full defaultView
-            setMaxVisibleRectSize();    // panelSize = getVisibleRectSize();
+            setMaxVisibleRectSize();
             repaint();
-            revalidate();    // imageScrollPane.validate();
+            revalidate();
             return;
         }
 
-        // Check if it is possible to use defaultView
         Dimension newImSize = new Dimension(image.getWidth(), image.getHeight());
-        if (defaultView) {
-            defaultView = canSetDefaultView(newImSize);
-        }
 
         imageSize = newImSize;
         panelSize = getVisibleRectSize();
 
-        if (defaultView) {
-            setMaxVisibleRectSize();    // panelSize = getVisibleRectSize();
-
-            double kh = (double) imageSize.height / panelSize.height;
-            double kw = (double) imageSize.width / panelSize.width;
-            double k = Math.max(kh, kw);
-
-            panelSize.width = (int) (imageSize.width / k);
-            panelSize.height = (int) (imageSize.height / k);
-
-            this.setPreferredSize(panelSize);
-
-            repaint();
-            imageScrollPane.getViewport().setViewPosition(new Point(0, 0));
-            revalidate();    // imageScrollPane.validate();
-            imageScrollPane.repaint();    // wipe off the old picture in "spare" space
-            imageScrollPane.revalidate();
-        } else {
-            // just change image
-            imageScrollPane.paintAll(imageScrollPane.getGraphics());
+        if (setPreviousViewPosition && canSetDefaultView(newImSize, previousVisibleRect)) {
+            panelSize = previousPanelSize;
+            imageScrollPane.getViewport().setViewPosition(new Point(previousVisibleRect.x, previousVisibleRect.y));
         }
 
+        imageScrollPane.paintAll(imageScrollPane.getGraphics());
     }
 
-    private boolean canSetDefaultView(Dimension newImSize) {
+    private boolean canSetDefaultView(Dimension newImSize, Rectangle previousVisibleRect) {
         if (imageSize == null) {
             return true;
         }
-        return (newImSize.height != imageSize.height) || (newImSize.width != imageSize.width);
+        return previousVisibleRect != null && (newImSize.height == imageSize.height) || (newImSize.width == imageSize.width);
     }
 
     /**
      * Sets "fit-screen" view.
      */
     public void fitScreen() {
-        setImage(image, true);
+        setMaxVisibleRectSize();
+
+        double kh = (double) imageSize.height / panelSize.height;
+        double kw = (double) imageSize.width / panelSize.width;
+        double k = Math.max(kh, kw);
+
+        panelSize.width = (int) (imageSize.width / k);
+        panelSize.height = (int) (imageSize.height / k);
+
+        this.setPreferredSize(panelSize);
+
+        repaint();
+        imageScrollPane.getViewport().setViewPosition(new Point(0, 0));
+        revalidate();
+        imageScrollPane.repaint();    // wipe off the old picture in "spare" space
+        imageScrollPane.revalidate();
     }
 
     /**
@@ -206,86 +213,6 @@ public class JImagePanel extends JPanel implements MouseListener, MouseMotionLis
         revalidate();
     }
 
-    public void setView(Rectangle rect) {
-        setView(rect, 10);
-    }
-
-    private boolean setView(Rectangle rect, int minSize) {
-        // should also take into account ScrollBars size
-        if (image == null) {
-            return false;
-        }
-
-        if (imageSize.width < minSize || imageSize.height < minSize) {
-            return false;
-        }
-
-        if (minSize <= 0) {
-            minSize = 10;
-        }
-
-        if (rect.width < minSize) {
-            rect.width = minSize;
-        }
-
-        if (rect.height < minSize) {
-            rect.height = minSize;
-        }
-
-        if (rect.x < 0) {
-            rect.x = 0;
-        }
-
-        if (rect.y < 0) {
-            rect.y = 0;
-        }
-
-        if (rect.x > imageSize.width - minSize) {
-            rect.x = imageSize.width - minSize;
-        }
-
-        if (rect.y > imageSize.height - minSize) {
-            rect.y = imageSize.height - minSize;
-        }
-
-        if ((rect.x + rect.width) > imageSize.width) {
-            rect.width = imageSize.width - rect.x;
-        }
-
-        if ((rect.y + rect.height) > imageSize.height) {
-            rect.height = imageSize.height - rect.y;
-        }
-
-        Dimension viewSize = getVisibleRectSize();
-
-        double kw = (double) rect.width / viewSize.width;
-        double kh = (double) rect.height / viewSize.height;
-        double k = Math.max(kh, kw);
-
-        int newPW = (int) (imageSize.width / k);
-        int newPH = (int) (imageSize.height / k);
-        // Check for size whether we can still zoom out
-        if (newPW == (int) (newPW * (1 - 2 * zoomCoefficient))) {
-            return setView(rect, minSize * 2);
-        }
-
-        panelSize.width = newPW;
-        panelSize.height = newPH;
-
-        revalidate();
-        imageScrollPane.validate();
-
-        int xc = rect.x + rect.width / 2, yc = rect.y + rect.height / 2;
-
-        xc = (int) (xc / k);
-        yc = (int) (yc / k);    // we need to center new view
-        imageScrollPane.getViewport().setViewPosition(new Point(xc - viewSize.width / 2, yc - viewSize.height / 2));
-        revalidate();    // imageScrollPane.validate();
-        imageScrollPane.paintAll(imageScrollPane.getGraphics());
-
-        return true;
-    }
-
     @Override
     public Dimension getPreferredSize() {
         return panelSize;
@@ -300,7 +227,7 @@ public class JImagePanel extends JPanel implements MouseListener, MouseMotionLis
             return;
         }
 
-        if (e.getModifiersEx() != InputEvent.CTRL_DOWN_MASK) {
+        if (!e.isControlDown()) {
             return;
         }
 
@@ -336,6 +263,7 @@ public class JImagePanel extends JPanel implements MouseListener, MouseMotionLis
         int y = (int) (e.getY() * k);
 
         Point scroll = imageScrollPane.getViewport().getViewPosition();
+
         scroll.x -= e.getX();
         scroll.y -= e.getY();
         scroll.x += x;
@@ -347,7 +275,11 @@ public class JImagePanel extends JPanel implements MouseListener, MouseMotionLis
 
         imageScrollPane.getHorizontalScrollBar().setValue(scroll.x);
         imageScrollPane.getVerticalScrollBar().setValue(scroll.y);
+
         imageScrollPane.repaint();
+
+        lastViewPoint = new Point(imageScrollPane.getViewport().getViewPosition());
+
     }
 
     @Override
@@ -361,61 +293,24 @@ public class JImagePanel extends JPanel implements MouseListener, MouseMotionLis
      */
     @Override
     public void mouseDragged(MouseEvent e) {
-        // Move image with mouse
-
         if (!e.isControlDown()) {
             return;
         }
-
-//        if (e.getModifiersEx() == InputEvent.BUTTON3_DOWN_MASK)        // ( (e.getModifiers() & MouseEvent.BUTTON3_MASK) == 0)
-//            return;
 
         // move picture using scroll
         Point scroll = imageScrollPane.getViewport().getViewPosition();
         scroll.x += (lastX - e.getX());
         scroll.y += (lastY - e.getY());
 
-        //imageScrollPane.getViewport().setViewPosition(scroll);
         imageScrollPane.getHorizontalScrollBar().setValue(scroll.x);
         imageScrollPane.getVerticalScrollBar().setValue(scroll.y);
         imageScrollPane.repaint();
 
-        // We changed the position of the underlying picture, take it into account
-        lastX = e.getX() + (lastX - e.getX());	// lastX = lastX
-        lastY = e.getY() + (lastY - e.getY());	// lastY = lastY
+        lastViewPoint = new Point(imageScrollPane.getViewport().getViewPosition());
     }
 
-    /**
-     * When a rectangle is selected with pressed right button,
-     * we zoom image to that rectangle
-     */
     @Override
     public void mouseReleased(MouseEvent e) {
-        if (!e.isAltDown())
-            return;
-
-        int x1 = e.getX();
-        int y1 = e.getY();
-
-        if (Math.abs(x1 - lastX) < 5 && Math.abs(y1 - lastY) < 5)
-            return;
-
-        double k = (double) imageSize.width / panelSize.width;
-
-        int x0 = (int) (k * lastX);
-        int y0 = (int) (k * lastY);
-
-        x1 = (int) (k * x1);
-        y1 = (int) (k * y1);
-
-        int w = Math.abs(x1 - x0);
-        int h = Math.abs(y1 - y0);
-
-        if (x1 < x0) x0 = x1;
-        if (y1 < y0) y0 = y1;
-
-        Rectangle rect = new Rectangle(x0, y0, w, h);
-        setView(rect);
     }
 
     /**
@@ -423,8 +318,9 @@ public class JImagePanel extends JPanel implements MouseListener, MouseMotionLis
      */
     @Override
     public void mouseClicked(MouseEvent e) {
-        if ((e.getModifiersEx() == InputEvent.BUTTON2_DOWN_MASK) || (e.getModifiersEx() == InputEvent.BUTTON3_DOWN_MASK))
+        if ((e.getModifiersEx() == InputEvent.BUTTON2_DOWN_MASK) || (e.getModifiersEx() == InputEvent.BUTTON3_DOWN_MASK)) {
             parentComponent.changeViewedImage();
+        }
 
         if (e.getModifiersEx() == InputEvent.SHIFT_DOWN_MASK) {
             if (imageSize == null) {

@@ -82,7 +82,7 @@ public class FrameWork extends JFrame implements ToolPanelEventListener {
         toolPanel.setLoadStrategy((file) -> {
             try {
                 originalImage = ImageIO.read(file);
-                panel.setImage(originalImage, true);
+                panel.setImage(originalImage, false);
                 panel.realSize();
                 delFiltered();
             } catch (IOException e) {
