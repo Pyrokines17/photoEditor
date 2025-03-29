@@ -19,16 +19,19 @@ public class MenuPanel extends JMenuBar {
     private final Parser parser = Parser.builder().build();
     private final HtmlRenderer renderer = HtmlRenderer.builder().build();
 
+    private final JMenu fileMenu;
     private final JMenu filtersMenu;
 
     public MenuPanel(FrameWork parent) {
         super();
 
-        JMenu fileMenu = new JMenu("File");
+        fileMenu = new JMenu("File");
         JMenuItem exitItem = new JMenuItem("Exit");
 
         exitItem.addActionListener(e -> System.exit(0));
         fileMenu.add(exitItem);
+
+        fileMenu.addSeparator();
 
         filtersMenu = new JMenu("Filters");
 
@@ -61,6 +64,13 @@ public class MenuPanel extends JMenuBar {
         });
 
         radioButton.setToolTipText("Apply " + lowerName + " filter");
+    }
+
+    public void addMenuItem(String name, Runnable action, String desc) {
+        JMenuItem menuItem = new JMenuItem(name);
+        menuItem.addActionListener(e -> action.run());
+        menuItem.setToolTipText(desc);
+        fileMenu.add(menuItem);
     }
 
     private JDialog getAboutDialog(FrameWork parent) {

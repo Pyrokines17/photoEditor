@@ -37,29 +37,28 @@ public class ToolPanel extends JToolBar {
 
         this.menuPanel = menuPanel;
         this.parent = parent;
-      
-        JButton fitScreenButton = getButton("Fit screen", () -> parent.onEvent(ToolPanelEventListener.EventType.FIT_SCREEN_BUTTON_CLICKED));
-      
-        JButton realSizeButton = getButton("Real size", () -> parent.onEvent(ToolPanelEventListener.EventType.REAL_SIZE_BUTTON_CLICKED));
-      
-        add(fitScreenButton);
-        add(realSizeButton);
 
-        JButton saveButton = getSaveButton();
-        JButton loadButton = getLoadButton();
+        addFileButton(() -> parent.onEvent(ToolPanelEventListener.EventType.FIT_SCREEN_BUTTON_CLICKED), "Fit", "Fit image to screen");
+        addFileButton(() -> parent.onEvent(ToolPanelEventListener.EventType.REAL_SIZE_BUTTON_CLICKED), "Real", "Show image in real size");
 
-        add(saveButton);
-        add(loadButton);
+        addFileButton(getLoadAct(), "Open", "Open image");
+        addFileButton(getSaveAct(), "Save", "Save image");
 
         addFilterButton(FilterList.GRAYSCALE, "Grayscale");
         addFilterButton(FilterList.NEGATIVE, "Negative");
         addFilterButton(FilterList.GAMMA, "Gamma");
     }
-  
-    private JButton getButton(String label, Runnable onPressAction) {
-        JButton button = new JButton(label);
+
+    private void addFileButton(Runnable onPressAction, String name, String desc) {
+        String lowerName = name.toLowerCase();
+        String path = ICON_PATH + lowerName + ".png";
+        JButton button = getButton(name, path);
+
         button.addActionListener(e -> onPressAction.run());
-        return button;
+        button.setToolTipText(desc);
+        this.add(button);
+
+        menuPanel.addMenuItem(name, onPressAction, desc);
     }
 
     private void addFilterButton(FilterList filter, String name) {
@@ -82,6 +81,19 @@ public class ToolPanel extends JToolBar {
         button.setToolTipText("Apply " + lowerName + " filter");
 
         menuPanel.addRadioButton(filter, name, this, filterAction);
+    }
+
+    private JButton getButton(String label, String iconPath) {
+        URL url = getClass().getResource(iconPath);
+
+        if (url == null) {
+            return new JButton(label);
+        }
+
+        ImageIcon icon = new ImageIcon(url);
+        Image image = icon.getImage().getScaledInstance(ICON_SIZE, ICON_SIZE, Image.SCALE_SMOOTH);
+
+        return new JButton(new ImageIcon(image));
     }
 
     private JToggleButton getToggleButton(String name, String iconPath) {
@@ -237,10 +249,8 @@ public class ToolPanel extends JToolBar {
         return value >= min && value <= max;
     }
 
-    private JButton getSaveButton() {
-        JButton saveButton = new JButton("Save");
-
-        saveButton.addActionListener(notUsed -> {
+    private Runnable getSaveAct() {
+        return () -> {
             if (savingStrategy == null) {
                 JOptionPane.showMessageDialog(parent, "Saving error", "Internal error", JOptionPane.ERROR_MESSAGE);
                 return;
@@ -252,15 +262,11 @@ public class ToolPanel extends JToolBar {
                 File selectedFile = fileChooser.getSelectedFile();
                 savingStrategy.accept(selectedFile, "PNG");
             }
-        });
-
-        return saveButton;
+        };
     }
 
-    private JButton getLoadButton() {
-        JButton loadButton = new JButton("Open");
-
-        loadButton.addActionListener(notUsed -> {
+    private Runnable getLoadAct() {
+        return () -> {
             if (loadStrategy == null) {
                 JOptionPane.showMessageDialog(parent, "Loading error", "Internal error", JOptionPane.ERROR_MESSAGE);
                 return;
@@ -276,9 +282,7 @@ public class ToolPanel extends JToolBar {
                 File selectedFile = fileChooser.getSelectedFile();
                 loadStrategy.accept(selectedFile);
             }
-        });
-
-        return loadButton;
+        };
     }
 
     public void setSavingStrategy(BiConsumer<File, String> savingStrategy) {
