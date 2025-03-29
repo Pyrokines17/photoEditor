@@ -36,30 +36,34 @@ public class FSDither extends Filter {
                 errB = (rgb & 0xFF) - (newColor & 0xFF);
 
                 if (j + 1 < w) {
-                    tmpR = ((arrImg[i * w + j + 1] >> 16) & 0xFF) + (errR * 7 / 16);
-                    tmpG = ((arrImg[i * w + j + 1] >> 8) & 0xFF) + (errG * 7 / 16);
-                    tmpB = (arrImg[i * w + j + 1] & 0xFF) + (errB * 7 / 16);
+                    int temp1 = arrImg[i * w + j + 1];
+                    tmpR = ((temp1 >> 16) & 0xFF) + (errR * 7 / 16);
+                    tmpG = ((temp1 >> 8) & 0xFF) + (errG * 7 / 16);
+                    tmpB = (temp1 & 0xFF) + (errB * 7 / 16);
                     arrImg[i * w + j + 1] = (tmpR << 16) | (tmpG << 8) | tmpB;
                 }
 
                 if (j - 1 >= 0 && i + 1 < h) {
-                    tmpR = ((arrImg[(i + 1) * w + j - 1] >> 16) & 0xFF) + (errR * 3 / 16);
-                    tmpG = ((arrImg[(i + 1) * w + j - 1] >> 8) & 0xFF) + (errG * 3 / 16);
-                    tmpB = (arrImg[(i + 1) * w + j - 1] & 0xFF) + (errB * 3 / 16);
+                    int temp2 = arrImg[(i + 1) * w + j - 1];
+                    tmpR = ((temp2 >> 16) & 0xFF) + (errR * 3 / 16);
+                    tmpG = ((temp2 >> 8) & 0xFF) + (errG * 3 / 16);
+                    tmpB = (temp2 & 0xFF) + (errB * 3 / 16);
                     arrImg[(i + 1) * w + j - 1] = (tmpR << 16) | (tmpG << 8) | tmpB;
                 }
 
                 if (i + 1 < h) {
-                    tmpR = ((arrImg[(i + 1) * w + j] >> 16) & 0xFF) + (errR * 5 / 16);
-                    tmpG = ((arrImg[(i + 1) * w + j] >> 8) & 0xFF) + (errG * 5 / 16);
-                    tmpB = (arrImg[(i + 1) * w + j] & 0xFF) + (errB * 5 / 16);
+                    int temp3 = arrImg[(i + 1) * w + j];
+                    tmpR = ((temp3 >> 16) & 0xFF) + (errR * 5 / 16);
+                    tmpG = ((temp3 >> 8) & 0xFF) + (errG * 5 / 16);
+                    tmpB = (temp3 & 0xFF) + (errB * 5 / 16);
                     arrImg[(i + 1) * w + j] = (tmpR << 16) | (tmpG << 8) | tmpB;
                 }
 
                 if (j + 1 < w && i + 1 < h) {
-                    tmpR = ((arrImg[(i + 1) * w + j + 1] >> 16) & 0xFF) + (errR / 16);
-                    tmpG = ((arrImg[(i + 1) * w + j + 1] >> 8) & 0xFF) + (errG / 16);
-                    tmpB = (arrImg[(i + 1) * w + j + 1] & 0xFF) + (errB / 16);
+                    int temp4 = arrImg[(i + 1) * w + j + 1];
+                    tmpR = ((temp4 >> 16) & 0xFF) + (errR / 16);
+                    tmpG = ((temp4 >> 8) & 0xFF) + (errG / 16);
+                    tmpB = (temp4 & 0xFF) + (errB / 16);
                     arrImg[(i + 1) * w + j + 1] = (tmpR << 16) | (tmpG << 8) | tmpB;
                 }
             }
