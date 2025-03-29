@@ -26,7 +26,7 @@ public class ToolPanel extends JToolBar {
     private BiConsumer<File, String> savingStrategy;
     private Consumer<File> loadStrategy;
 
-    private final static String ICON_PATH = "icons/";
+    private final static String ICON_PATH = "/icons/";
     private final static Integer ICON_SIZE = 20;
 
     private final HashMap<FilterList, Parameters> parametersHashMap = new HashMap<>();
@@ -85,7 +85,7 @@ public class ToolPanel extends JToolBar {
     }
 
     private JToggleButton getToggleButton(String name, String iconPath) {
-        URL url = getClass().getClassLoader().getResource(iconPath);
+        URL url = getClass().getResource(iconPath);
 
         if (url == null) {
             return new JToggleButton(name);
