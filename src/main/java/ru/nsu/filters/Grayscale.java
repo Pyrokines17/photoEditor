@@ -11,16 +11,16 @@ public class Grayscale extends Filter {
     public BufferedImage apply(BufferedImage image, int x, int y) {
         BufferedImage newImage = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_RGB);
 
-        for (int i = 0; i < image.getWidth(); i++) {
-            for (int j = 0; j < image.getHeight(); j++) {
-                int rgb = image.getRGB(i, j);
+        for (int i = 0; i < image.getHeight(); ++i) {
+            for (int j = 0; j < image.getWidth(); ++j) {
+                int rgb = image.getRGB(j, i);
                 int a = rgb & 0xFF000000;
                 int r = (rgb >> 16) & 0xFF;
                 int g = (rgb >> 8) & 0xFF;
                 int b = rgb & 0xFF;
                 //int avg = (r + g + b) / 3;
                 int avg = (77*r + 151*g + 28*b) >> 8;
-                newImage.setRGB(i, j, a | (avg << 16) | (avg << 8) | avg);
+                newImage.setRGB(j, i, a | (avg << 16) | (avg << 8) | avg);
             }
         }
 
