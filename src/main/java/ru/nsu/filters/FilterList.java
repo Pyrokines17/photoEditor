@@ -7,4 +7,6 @@ public enum FilterList {
     ORDERED_DITHERING,
     FSDITHERING,
     GAUSSIAN_FILTER,
+    SHARPENING,
+    EMBOSS,
 }

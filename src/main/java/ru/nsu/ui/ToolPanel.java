@@ -50,6 +50,8 @@ public class ToolPanel extends JToolBar {
         addFilterButton(FilterList.ORDERED_DITHERING, "OrderedDithering");
         addFilterButton(FilterList.FSDITHERING, "FSDithering");
         addFilterButton(FilterList.GAUSSIAN_FILTER, "Gaussian filter");
+        addFilterButton(FilterList.SHARPENING, "Sharpen");
+        addFilterButton(FilterList.EMBOSS, "Emboss");
     }
 
     private void addFileButton(Runnable onPressAction, String name, String desc) {

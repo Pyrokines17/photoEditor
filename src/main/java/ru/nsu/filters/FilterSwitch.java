@@ -19,7 +19,7 @@ public class FilterSwitch {
                 borders.put("window size", "3|5");
                 return new Parameters(types, borders);
             }
-            case NEGATIVE, GRAYSCALE, ORDERED_DITHERING, FSDITHERING:
+            case NEGATIVE, GRAYSCALE, ORDERED_DITHERING, FSDITHERING, SHARPENING, EMBOSS:
             default:
                 return new Parameters(null, null);
         }
@@ -33,6 +33,8 @@ public class FilterSwitch {
             case ORDERED_DITHERING -> new OrderedDither(parameters);
             case FSDITHERING -> new FSDither(parameters);
             case GAUSSIAN_FILTER -> new GaussianFilter(parameters);
+            case SHARPENING -> new Sharpening(parameters);
+            case EMBOSS -> new Emboss(parameters);
         };
     }
 }

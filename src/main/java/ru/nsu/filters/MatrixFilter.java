@@ -13,13 +13,14 @@ public abstract class MatrixFilter extends Filter {
         BufferedImage newImage = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_RGB);
         for (int i = 0; i < image.getHeight(); ++i) {
             for (int j = 0; j < image.getWidth(); ++j) {
-                applyMatrixToPixel(image, filterMatrix, j, i, newImage);
+                int applied = applyMatrixToPixel(image, filterMatrix, j, i);
+                newImage.setRGB(j, i, applied);
             }
         }
         return newImage;
     }
 
-    private void applyMatrixToPixel(BufferedImage image, FilterMatrix filterMatrix, int i, int j, BufferedImage newImage) {
+    protected int applyMatrixToPixel(BufferedImage image, FilterMatrix filterMatrix, int i, int j) {
         int rgb, r, g, b;
         int halfMatrixSize = filterMatrix.size / 2;
         double newR = 0, newG = 0, newB = 0;
@@ -39,7 +40,7 @@ public abstract class MatrixFilter extends Filter {
             }
         }
 
-        newImage.setRGB(i, j, convertBack(newR, newG, newB));
+        return convertBack(newR, newG, newB);
     }
 
     private int convertBack(double newR, double newG, double newB) {
@@ -51,13 +52,14 @@ public abstract class MatrixFilter extends Filter {
 
     private int intCastWithBorders(double val, int leftBorder, int rightBorder) {
         int intVal = (int) val;
-        if (intVal < leftBorder) {
+        return cutToBorders(intVal, leftBorder, rightBorder);
+    }
+
+    protected int cutToBorders(int val, int leftBorder, int rightBorder) {
+        if (val < leftBorder) {
             return leftBorder;
         }
-        if (intVal > rightBorder) {
-            return rightBorder;
-        }
-        return intVal;
+        return Math.min(val, rightBorder);
     }
 
     private int getImageRGB(BufferedImage image, int x, int y) {
