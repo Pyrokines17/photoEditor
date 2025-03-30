@@ -10,4 +10,5 @@ public enum FilterList {
     SHARPENING,
     EMBOSS,
     SOBEL_HIGHLIGHTING,
+    ROBERTS_HIGHLIGHTING,
 }

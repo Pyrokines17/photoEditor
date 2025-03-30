@@ -2,27 +2,25 @@ package ru.nsu.filters;
 
 import java.awt.image.BufferedImage;
 
-public class SobelBorderHighlight extends MatrixFilter {
+public class RobertsBorderHighlight extends MatrixFilter {
 
     private static final double[] gx = {
-            -1, 0, 1,
-            -2, 0, 2,
-            -1, 0, 1
+            1, 0,
+            0, -1
     };
 
     private static final double[] gy = {
-            -1, -2, -1,
-            0, 0, 0,
-            1, 2, 1
+            0, 1,
+            -1, 0
     };
 
-    SobelBorderHighlight(Parameters parameters) {
+    RobertsBorderHighlight(Parameters parameters) {
         super(parameters);
     }
 
     @Override
     public BufferedImage apply(BufferedImage image, int x, int y) {
-        return apply(image, new FilterMatrix(null, 3));
+        return apply(image, new FilterMatrix(null, 2));
     }
 
     @Override
@@ -65,5 +63,4 @@ public class SobelBorderHighlight extends MatrixFilter {
     protected int cutToBorders(int val, int leftBorder, int rightBorder) {
         return super.cutToBorders(val, leftBorder, rightBorder) > parameters.getIntParam("sensitivity") ? rightBorder : leftBorder;
     }
-
 }

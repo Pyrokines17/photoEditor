@@ -19,7 +19,14 @@ public class FilterSwitch {
                 borders.put("window size", "3|5");
                 return new Parameters(types, borders);
             }
-            case NEGATIVE, GRAYSCALE, ORDERED_DITHERING, FSDITHERING, SHARPENING, EMBOSS, SOBEL_HIGHLIGHTING:
+            case SOBEL_HIGHLIGHTING, ROBERTS_HIGHLIGHTING: {
+                HashMap<String, String> types = new HashMap<>();
+                types.put("sensitivity", "int");
+                HashMap<String, String> borders = new HashMap<>();
+                borders.put("sensitivity", "0|255");
+                return new Parameters(types, borders);
+            }
+            case NEGATIVE, GRAYSCALE, ORDERED_DITHERING, FSDITHERING, SHARPENING, EMBOSS:
             default:
                 return new Parameters(null, null);
         }
@@ -36,6 +43,7 @@ public class FilterSwitch {
             case SHARPENING -> new Sharpening(parameters);
             case EMBOSS -> new Emboss(parameters);
             case SOBEL_HIGHLIGHTING -> new SobelBorderHighlight(parameters);
+            case ROBERTS_HIGHLIGHTING -> new RobertsBorderHighlight(parameters);
         };
     }
 }
