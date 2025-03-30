@@ -43,14 +43,14 @@ public abstract class MatrixFilter extends Filter {
         return convertBack(newR, newG, newB);
     }
 
-    private int convertBack(double newR, double newG, double newB) {
+    protected int convertBack(double newR, double newG, double newB) {
         int newRed = intCastWithBorders(newR, 0, 255);
         int newGreen = intCastWithBorders(newG, 0, 255);
         int newBlue = intCastWithBorders(newB, 0, 255);
         return convertBack(newRed, newGreen, newBlue);
     }
 
-    private int intCastWithBorders(double val, int leftBorder, int rightBorder) {
+    protected int intCastWithBorders(double val, int leftBorder, int rightBorder) {
         int intVal = (int) val;
         return cutToBorders(intVal, leftBorder, rightBorder);
     }
@@ -62,7 +62,7 @@ public abstract class MatrixFilter extends Filter {
         return Math.min(val, rightBorder);
     }
 
-    private int getImageRGB(BufferedImage image, int x, int y) {
+    protected int getImageRGB(BufferedImage image, int x, int y) {
         if (x < 0 || x >= image.getWidth() || y < 0 || y >= image.getHeight()) {
             return 0;
         }

@@ -9,4 +9,5 @@ public enum FilterList {
     GAUSSIAN_FILTER,
     SHARPENING,
     EMBOSS,
+    SOBEL_HIGHLIGHTING,
 }
