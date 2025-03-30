@@ -11,4 +11,6 @@ public enum FilterList {
     EMBOSS,
     SOBEL_HIGHLIGHTING,
     ROBERTS_HIGHLIGHTING,
+    FSDITHERING_I,
+    ORDERED_DITHER_I,
 }

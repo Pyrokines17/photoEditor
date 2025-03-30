@@ -1,5 +1,7 @@
 package ru.nsu.filters;
 
+import ru.nsu.filters.iliaDither.FloydSteinbergDither;
+
 import java.util.HashMap;
 
 public class FilterSwitch {
@@ -26,6 +28,13 @@ public class FilterSwitch {
                 borders.put("sensitivity", "0|255");
                 return new Parameters(types, borders);
             }
+            case FSDITHERING_I, ORDERED_DITHER_I: {
+                HashMap<String, String> types = new HashMap<>();
+                types.put("quants", "int");
+                HashMap<String, String> borders = new HashMap<>();
+                borders.put("quants", "2|128");
+                return new Parameters(types, borders);
+            }
             case NEGATIVE, GRAYSCALE, ORDERED_DITHERING, FSDITHERING, SHARPENING, EMBOSS:
             default:
                 return new Parameters(null, null);
@@ -44,6 +53,8 @@ public class FilterSwitch {
             case EMBOSS -> new Emboss(parameters);
             case SOBEL_HIGHLIGHTING -> new SobelBorderHighlight(parameters);
             case ROBERTS_HIGHLIGHTING -> new RobertsBorderHighlight(parameters);
+            case FSDITHERING_I -> new FloydSteinbergDither(parameters);
+            case ORDERED_DITHER_I -> new ru.nsu.filters.iliaDither.OrderedDither(parameters);
         };
     }
 }
