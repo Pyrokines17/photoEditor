@@ -129,10 +129,10 @@ public class ToolPanel extends JToolBar {
             Parameters parameters = FilterSwitch.getParameters(filter);
             HashMap<String, String> types = parameters.getTypes();
             HashMap<String, String> borders = parameters.getBorders();
-            HashMap<String, JTextField> fields = new HashMap<>();
+            HashMap<String, Component> fields = new HashMap<>();
 
             if (types != null) {
-                JPanel dialog = generateParameterSelectionDialog(filter, types, fields);
+                JPanel dialog = generateParameterSelectionDialog(filter, types, borders, fields);
 
                 boolean lastTry = false;
 
@@ -207,10 +207,9 @@ public class ToolPanel extends JToolBar {
         return Arrays.stream(s.split(",")).map((Double::parseDouble)).anyMatch(enumVal -> enumVal.equals(val));
     }
 
-    private boolean parseParameter(HashMap<String, JTextField> fields, String name, Function<String, Number> parser,
+    private boolean parseParameter(HashMap<String, Component> fields, String name, Function<String, Number> parser,
                                    Predicate<Number> checkValue, Parameters parameters) {
-        JTextField field = fields.get(name);
-        String text = field.getText();
+        String text = getTextFromComponent(fields.get(name));
 
         if (text.isEmpty()) {
             JOptionPane.showMessageDialog(parent, "Empty field", "Error", JOptionPane.ERROR_MESSAGE);
@@ -241,7 +240,17 @@ public class ToolPanel extends JToolBar {
         }
     }
 
-    private JPanel generateParameterSelectionDialog(FilterList filter, HashMap<String, String> types, HashMap<String, JTextField> fields) {
+    private String getTextFromComponent(Component component) {
+        if (component instanceof JTextField) {
+            return ((JTextField)component).getText();
+        }
+        if (component instanceof JComboBox<?>) {
+            return (String)((JComboBox<?>) component).getSelectedItem();
+        }
+        throw new IllegalArgumentException("Unknown component.");
+    }
+
+    private JPanel generateParameterSelectionDialog(FilterList filter, HashMap<String, String> types, HashMap<String, String> borders, HashMap<String, Component> fields) {
         JPanel dialog = new JPanel();
         dialog.setLayout(new BoxLayout(dialog, BoxLayout.Y_AXIS));
 
@@ -254,18 +263,28 @@ public class ToolPanel extends JToolBar {
             String type = types.get(name);
 
             if (type.equals("int") || type.equals("double")) {
-                JTextField field = new JTextField();
+                switch (Parameters.getConstraintType(borders.get(name))) {
+                    case BORDERS -> {
+                        JTextField field = new JTextField();
 
-                if (oldParameters != null) {
-                    if (type.equals("int")) {
-                        field.setText(Integer.toString(oldParameters.getIntParam(name)));
-                    } else {
-                        field.setText(Double.toString(oldParameters.getDoubleParam(name)));
+                        if (oldParameters != null) {
+                            if (type.equals("int")) {
+                                field.setText(Integer.toString(oldParameters.getIntParam(name)));
+                            } else {
+                                field.setText(Double.toString(oldParameters.getDoubleParam(name)));
+                            }
+                        }
+
+                        panel.add(field);
+                        fields.put(name, field);
+                    }
+                    case ENUM -> {
+                        String[] options = borders.get(name).split(",");
+                        JComboBox<String> dropdown = new JComboBox<>(options);
+                        panel.add(dropdown);
+                        fields.put(name, dropdown);
                     }
                 }
-
-                panel.add(field);
-                fields.put(name, field);
             }
 
             dialog.add(panel);
