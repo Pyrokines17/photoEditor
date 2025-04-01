@@ -9,12 +9,29 @@ public class Parameters {
     private final HashMap<String, Integer> intParams;
     private final HashMap<String, Double> doubleParams;
 
+    public enum ConstraintType {
+        BORDERS,
+        ENUM,
+    }
+
     public Parameters(HashMap<String, String> types, HashMap<String, String> borders) {
         this.types = types;
         this.borders = borders;
 
         intParams = new HashMap<>();
         doubleParams = new HashMap<>();
+    }
+
+    public static ConstraintType getConstraintType(String constraint) {
+        if (constraint.contains("|")) {
+            return ConstraintType.BORDERS;
+        }
+        else if (constraint.contains(",")) {
+            return ConstraintType.ENUM;
+        }
+        else {
+            throw new IllegalArgumentException("String format is invalid.");
+        }
     }
 
     public HashMap<String, String> getTypes() {

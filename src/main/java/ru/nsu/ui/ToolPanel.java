@@ -5,15 +5,20 @@ import ru.nsu.filters.FilterSwitch;
 import ru.nsu.filters.Parameters;
 
 import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.io.File;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.util.*;
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
 public class ToolPanel extends JToolBar {
     private final JFileChooser fileChooser = new JFileChooser();
@@ -132,37 +137,10 @@ public class ToolPanel extends JToolBar {
             Parameters parameters = FilterSwitch.getParameters(filter);
             HashMap<String, String> types = parameters.getTypes();
             HashMap<String, String> borders = parameters.getBorders();
-            HashMap<String, JTextField> fields = new HashMap<>();
+            HashMap<String, Component> fields = new HashMap<>();
 
             if (types != null) {
-                JPanel dialog = new JPanel();
-                dialog.setLayout(new BoxLayout(dialog, BoxLayout.Y_AXIS));
-
-                Parameters oldParameters = parametersHashMap.get(filter);
-
-                for (String name : types.keySet()) {
-                    JPanel panel = new JPanel();
-                    panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
-                    panel.add(new JLabel("Enter "+name+": "));
-                    String type = types.get(name);
-
-                    if (type.equals("int") || type.equals("double")) {
-                        JTextField field = new JTextField();
-
-                        if (oldParameters != null) {
-                            if (type.equals("int")) {
-                                field.setText(Integer.toString(oldParameters.getIntParam(name)));
-                            } else {
-                                field.setText(Double.toString(oldParameters.getDoubleParam(name)));
-                            }
-                        }
-
-                        panel.add(field);
-                        fields.put(name, field);
-                    }
-
-                    dialog.add(panel);
-                }
+                JPanel dialog = generateParameterSelectionDialog(filter, types, borders, fields);
 
                 boolean lastTry = false;
 
@@ -184,47 +162,38 @@ public class ToolPanel extends JToolBar {
                     }
 
                     for (String name : fields.keySet()) {
-                        JTextField field = fields.get(name);
-                        String text = field.getText();
+                        boolean parsingSuccess;
+                        Function<String, Number> parser;
+                        Predicate<Number> checkValue;
 
-                        if (text.isEmpty()) {
-                            JOptionPane.showMessageDialog(parent, "Empty field", "Error", JOptionPane.ERROR_MESSAGE);
-                            lastTry = false;
-                            break;
+                        switch (Parameters.getConstraintType(parameters.getBorders().get(name))) {
+                            case BORDERS -> {
+                                if (types.get(name).equals("int")) {
+                                    checkValue = (val) -> checkIntBorders((Integer) val, parameters.getBorders().get(name));
+                                    parser = Integer::parseInt;
+                                }
+                                else {
+                                    checkValue = (val) -> checkDoubleBorders((Double) val, parameters.getBorders().get(name));
+                                    parser = Double::parseDouble;
+                                }
+                            }
+                            case ENUM -> {
+                                if (types.get(name).equals("int")) {
+                                    checkValue = (val) -> checkIntEnumValue((Integer) val, parameters.getBorders().get(name));
+                                    parser = Integer::parseInt;
+                                }
+                                else {
+                                    checkValue = (val) -> checkDoubleEnumValue((Double) val, parameters.getBorders().get(name));
+                                    parser = Double::parseDouble;
+                                }
+                            }
+                            default -> throw new IllegalArgumentException("Unknown constraint type.");
                         }
 
-                        if (types.get(name).equals("int")) {
-                            try {
-                                int value = Integer.parseInt(text);
-                                if (!checkIntBorders(value, borders.get(name))) {
-                                    throw new RuntimeException();
-                                }
-                                parameters.setIntParam(name, value);
-                            } catch (NumberFormatException e) {
-                                JOptionPane.showMessageDialog(parent, "Invalid integer: "+text, "Error", JOptionPane.ERROR_MESSAGE);
-                                lastTry = false;
-                                break;
-                            } catch (RuntimeException e) {
-                                JOptionPane.showMessageDialog(parent, "Value is out of borders: "+borders.get(name), "Info", JOptionPane.INFORMATION_MESSAGE);
-                                lastTry = false;
-                                break;
-                            }
-                        } else {
-                            try {
-                                double value = Double.parseDouble(text);
-                                if (!checkDoubleBorders(value, borders.get(name))) {
-                                    throw new RuntimeException();
-                                }
-                                parameters.setDoubleParam(name, value);
-                            } catch (NumberFormatException e) {
-                                JOptionPane.showMessageDialog(parent, "Invalid double: "+text, "Error", JOptionPane.ERROR_MESSAGE);
-                                lastTry = false;
-                                break;
-                            } catch (RuntimeException e) {
-                                JOptionPane.showMessageDialog(parent, "Value is out of borders: "+borders.get(name), "Info", JOptionPane.INFORMATION_MESSAGE);
-                                lastTry = false;
-                                break;
-                            }
+                        parsingSuccess = parseParameter(fields, name, parser, checkValue, parameters);
+                        if (!parsingSuccess) {
+                            lastTry = false;
+                            break;
                         }
                     }
                 }
@@ -236,6 +205,208 @@ public class ToolPanel extends JToolBar {
             parent.delFiltered();
             lastSelected = index;
         };
+    }
+
+    private boolean checkIntEnumValue(Integer val, String s) {
+        return Arrays.stream(s.split(",")).map((Integer::parseInt)).anyMatch(enumVal -> enumVal.equals(val));
+    }
+
+    private boolean checkDoubleEnumValue(Double val, String s) {
+        return Arrays.stream(s.split(",")).map((Double::parseDouble)).anyMatch(enumVal -> enumVal.equals(val));
+    }
+
+    private boolean parseParameter(HashMap<String, Component> fields, String name, Function<String, Number> parser,
+                                   Predicate<Number> checkValue, Parameters parameters) {
+        String text = getTextFromComponent(fields.get(name));
+
+        if (text.isEmpty()) {
+            JOptionPane.showMessageDialog(parent, "Empty field", "Error", JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
+        try {
+            Number value = parser.apply(text);
+            if (!checkValue.test(value)) {
+                throw new RuntimeException();
+            }
+            if (value instanceof Integer) {
+                parameters.setIntParam(name, (Integer) value);
+            }
+            else if (value instanceof Double) {
+                parameters.setDoubleParam(name, (Double) value);
+            }
+            else {
+                throw new RuntimeException("Value of invalid type.");
+            }
+
+            return true;
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(parent, "Invalid value: " + text + " for parameter: " + name, "Error", JOptionPane.ERROR_MESSAGE);
+            return false;
+        } catch (RuntimeException e) {
+            JOptionPane.showMessageDialog(parent, "Value " + name + " is out of borders: "+parameters.getBorders().get(name), "Info", JOptionPane.INFORMATION_MESSAGE);
+            return false;
+        }
+    }
+
+    private String getTextFromComponent(Component component) {
+        if (component instanceof JTextField) {
+            return ((JTextField)component).getText();
+        }
+        if (component instanceof JComboBox<?>) {
+            return (String)((JComboBox<?>) component).getSelectedItem();
+        }
+        throw new IllegalArgumentException("Unknown component.");
+    }
+
+    private JPanel generateParameterSelectionDialog(FilterList filter, HashMap<String, String> types, HashMap<String, String> borders, HashMap<String, Component> fields) {
+        JPanel dialog = new JPanel();
+        dialog.setLayout(new BoxLayout(dialog, BoxLayout.Y_AXIS));
+
+        Parameters oldParameters = parametersHashMap.get(filter);
+
+        for (String name : types.keySet()) {
+            JPanel panel = new JPanel();
+            panel.setLayout(new GridLayout(1, 3, 2, 2));
+            panel.add(new JLabel("Enter "+name+": "));
+            String type = types.get(name);
+
+            if (type.equals("int") || type.equals("double")) {
+                switch (Parameters.getConstraintType(borders.get(name))) {
+                    case BORDERS -> {
+                        JTextField field = new JTextField();
+                        JSlider slider;
+
+                        if (type.equals("int")) {
+                            slider = getIntSlider(borders.get(name), field);
+                        }
+                        else {
+                            slider = getDoubleSlider(borders.get(name), field, 0.1);
+                        }
+
+                        if (oldParameters != null) {
+                            if (type.equals("int")) {
+                                field.setText(Integer.toString(oldParameters.getIntParam(name)));
+                            } else {
+                                field.setText(Double.toString(oldParameters.getDoubleParam(name)));
+                            }
+                        }
+
+                        panel.add(field);
+                        panel.add(slider);
+                        fields.put(name, field);
+                    }
+                    case ENUM -> {
+                        String[] options = borders.get(name).split(",");
+                        JComboBox<String> dropdown = new JComboBox<>(options);
+                        panel.add(dropdown);
+                        fields.put(name, dropdown);
+                    }
+                }
+            }
+
+            dialog.add(panel);
+        }
+        return dialog;
+    }
+
+    private JSlider getDoubleSlider(String borders, JTextField field, double step) {
+        Double[] border = Arrays.stream(borders.split("\\|")).map(Double::parseDouble).toArray(Double[]::new);
+        double min = Math.min(border[0], border[1]);
+        double max = Math.max(border[0], border[1]);
+
+        int intMin = (int) (min / step);
+        int intMax = (int) (max / step);
+        JSlider slider = new JSlider(intMin, intMax);
+
+        slider.setMajorTickSpacing(10);
+        slider.setMinorTickSpacing(1);
+        slider.setPaintTicks(true);
+
+        DecimalFormat format = new DecimalFormat("#.00", new DecimalFormatSymbols(Locale.US));
+
+        slider.addChangeListener(e -> {
+            double value = slider.getValue() * step;
+            field.setText(format.format(value));
+        });
+
+        field.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                updateSlider();
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                updateSlider();
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                updateSlider();
+            }
+
+            private void updateSlider() {
+                SwingUtilities.invokeLater(() -> {
+                    String text = field.getText();
+                    if (!textValid(text)) {
+                        return;
+                    }
+                    double value = Double.parseDouble(text);
+                    int intValue = (int) Math.round(value / step);
+                    slider.setValue(intValue);
+                });
+            }
+
+            private boolean textValid(String text) {
+                try {
+                    double value = Double.parseDouble(text);
+                    return !(value < min) && !(value > max);
+                }
+                catch (NumberFormatException ignore) {
+                    return false;
+                }
+            }
+        });
+        return slider;
+    }
+
+    private JSlider getIntSlider(String borders, JTextField field) {
+        Integer[] border = Arrays.stream(borders.split("\\|")).map(Integer::parseInt).toArray(Integer[]::new);
+        int leftBorder = Math.min(border[0], border[1]);
+        int rightBorder = Math.max(border[0], border[1]);
+        JSlider slider = new JSlider(leftBorder, rightBorder);
+        bindTextFieldAndSlider(slider, field);
+        return slider;
+    }
+
+    private void bindTextFieldAndSlider(JSlider slider, JTextField field) {
+        slider.addChangeListener(e -> {
+            field.setText(Integer.toString(slider.getValue()));
+        });
+        field.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                updateSlider();
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                updateSlider();
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                updateSlider();
+            }
+            private void updateSlider() {
+                SwingUtilities.invokeLater(() -> {
+                    try {
+                        slider.setValue(Integer.parseInt(field.getText()));
+                    }
+                    catch (NumberFormatException ignore) {}
+                });
+            }
+        });
     }
 
     private boolean checkIntBorders(Integer value, String borders) {
