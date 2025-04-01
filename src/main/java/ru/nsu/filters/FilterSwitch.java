@@ -18,7 +18,7 @@ public class FilterSwitch {
                 HashMap<String, String> types = new HashMap<>();
                 types.put("window size", "int");
                 HashMap<String, String> borders = new HashMap<>();
-                borders.put("window size", "3|5");
+                borders.put("window size", "3,5,7,9,11");
                 return new Parameters(types, borders);
             }
             case SOBEL_HIGHLIGHTING, ROBERTS_HIGHLIGHTING: {
@@ -30,9 +30,22 @@ public class FilterSwitch {
             }
             case FSDITHERING_I, ORDERED_DITHER_I: {
                 HashMap<String, String> types = new HashMap<>();
-                types.put("quants", "int");
+                types.put("red quants", "int");
+                types.put("green quants", "int");
+                types.put("blue quants", "int");
                 HashMap<String, String> borders = new HashMap<>();
-                borders.put("quants", "2|128");
+                borders.put("red quants", "2|128");
+                borders.put("green quants", "2|128");
+                borders.put("blue quants", "2|128");
+                return new Parameters(types, borders);
+            }
+            case CRYSTALLIZE: {
+                HashMap<String, String> types = new HashMap<>();
+                types.put("crystal width", "int");
+                types.put("crystal height", "int");
+                HashMap<String, String> borders = new HashMap<>();
+                borders.put("crystal width", "10|100");
+                borders.put("crystal height", "10|100");
                 return new Parameters(types, borders);
             }
             case NEGATIVE, GRAYSCALE, ORDERED_DITHERING, FSDITHERING, SHARPENING, EMBOSS:
@@ -55,6 +68,7 @@ public class FilterSwitch {
             case ROBERTS_HIGHLIGHTING -> new RobertsBorderHighlight(parameters);
             case FSDITHERING_I -> new FloydSteinbergDither(parameters);
             case ORDERED_DITHER_I -> new ru.nsu.filters.iliaDither.OrderedDither(parameters);
+            case CRYSTALLIZE -> new Crystallize(parameters);
         };
     }
 }

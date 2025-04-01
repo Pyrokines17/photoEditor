@@ -61,6 +61,7 @@ public class ToolPanel extends JToolBar {
         addFilterButton(FilterList.ROBERTS_HIGHLIGHTING, "RobertsHighlighting");
         addFilterButton(FilterList.FSDITHERING_I, "Floyd-Steinberg dither");
         addFilterButton(FilterList.ORDERED_DITHER_I, "Ordered dither");
+        addFilterButton(FilterList.CRYSTALLIZE, "Crystallize");
     }
 
     private void addFileButton(Runnable onPressAction, String name, String desc) {
