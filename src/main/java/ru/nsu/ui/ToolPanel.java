@@ -5,13 +5,15 @@ import ru.nsu.filters.FilterSwitch;
 import ru.nsu.filters.Parameters;
 
 import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.io.File;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.util.*;
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -52,7 +54,6 @@ public class ToolPanel extends JToolBar {
         addFilterButton(FilterList.GAMMA, "Gamma");
         addFilterButton(FilterList.ORDERED_DITHERING, "OrderedDithering");
         addFilterButton(FilterList.FSDITHERING, "FSDithering");
-        addFilterButton(FilterList.TEST, "test");
     }
 
     private void addFileButton(Runnable onPressAction, String name, String desc) {
@@ -258,7 +259,7 @@ public class ToolPanel extends JToolBar {
 
         for (String name : types.keySet()) {
             JPanel panel = new JPanel();
-            panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
+            panel.setLayout(new GridLayout(1, 3, 2, 2));
             panel.add(new JLabel("Enter "+name+": "));
             String type = types.get(name);
 
@@ -275,7 +276,17 @@ public class ToolPanel extends JToolBar {
                             }
                         }
 
+                        JSlider slider;
+
+                        if (type.equals("int")) {
+                            slider = getIntSlider(borders.get(name), field);
+                        }
+                        else {
+                            slider = getDoubleSlider(borders.get(name), field, 0.1);
+                        }
+
                         panel.add(field);
+                        panel.add(slider);
                         fields.put(name, field);
                     }
                     case ENUM -> {
@@ -290,6 +301,106 @@ public class ToolPanel extends JToolBar {
             dialog.add(panel);
         }
         return dialog;
+    }
+
+    private JSlider getDoubleSlider(String borders, JTextField field, double step) {
+        Double[] border = Arrays.stream(borders.split("\\|")).map(Double::parseDouble).toArray(Double[]::new);
+        double min = Math.min(border[0], border[1]);
+        double max = Math.max(border[0], border[1]);
+
+        int intMin = (int) (min / step);
+        int intMax = (int) (max / step);
+        JSlider slider = new JSlider(intMin, intMax);
+
+        slider.setMajorTickSpacing(10);
+        slider.setMinorTickSpacing(1);
+        slider.setPaintTicks(true);
+
+        DecimalFormat format = new DecimalFormat("#.00", new DecimalFormatSymbols(Locale.US));
+
+        slider.addChangeListener(e -> {
+            double value = slider.getValue() * step;
+            field.setText(format.format(value));
+        });
+
+        field.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                updateSlider();
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                updateSlider();
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                updateSlider();
+            }
+
+            private void updateSlider() {
+                SwingUtilities.invokeLater(() -> {
+                    String text = field.getText();
+                    if (!textValid(text)) {
+                        return;
+                    }
+                    double value = Double.parseDouble(text);
+                    int intValue = (int) Math.round(value / step);
+                    slider.setValue(intValue);
+                });
+            }
+
+            private boolean textValid(String text) {
+                try {
+                    double value = Double.parseDouble(text);
+                    return !(value < min) && !(value > max);
+                }
+                catch (NumberFormatException ignore) {
+                    return false;
+                }
+            }
+        });
+        return slider;
+    }
+
+    private JSlider getIntSlider(String borders, JTextField field) {
+        Integer[] border = Arrays.stream(borders.split("\\|")).map(Integer::parseInt).toArray(Integer[]::new);
+        int leftBorder = Math.min(border[0], border[1]);
+        int rightBorder = Math.max(border[0], border[1]);
+        JSlider slider = new JSlider(leftBorder, rightBorder);
+        bindTextFieldAndSlider(slider, field);
+        return slider;
+    }
+
+    private void bindTextFieldAndSlider(JSlider slider, JTextField field) {
+        slider.addChangeListener(e -> {
+            field.setText(Integer.toString(slider.getValue()));
+        });
+        field.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                updateSlider();
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                updateSlider();
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                updateSlider();
+            }
+            private void updateSlider() {
+                SwingUtilities.invokeLater(() -> {
+                    try {
+                        slider.setValue(Integer.parseInt(field.getText()));
+                    }
+                    catch (NumberFormatException ignore) {}
+                });
+            }
+        });
     }
 
     private boolean checkIntBorders(Integer value, String borders) {

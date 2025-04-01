@@ -6,5 +6,4 @@ public enum FilterList {
     GAMMA,
     ORDERED_DITHERING,
     FSDITHERING,
-    TEST,
 }
