@@ -267,15 +267,6 @@ public class ToolPanel extends JToolBar {
                 switch (Parameters.getConstraintType(borders.get(name))) {
                     case BORDERS -> {
                         JTextField field = new JTextField();
-
-                        if (oldParameters != null) {
-                            if (type.equals("int")) {
-                                field.setText(Integer.toString(oldParameters.getIntParam(name)));
-                            } else {
-                                field.setText(Double.toString(oldParameters.getDoubleParam(name)));
-                            }
-                        }
-
                         JSlider slider;
 
                         if (type.equals("int")) {
@@ -283,6 +274,14 @@ public class ToolPanel extends JToolBar {
                         }
                         else {
                             slider = getDoubleSlider(borders.get(name), field, 0.1);
+                        }
+
+                        if (oldParameters != null) {
+                            if (type.equals("int")) {
+                                field.setText(Integer.toString(oldParameters.getIntParam(name)));
+                            } else {
+                                field.setText(Double.toString(oldParameters.getDoubleParam(name)));
+                            }
                         }
 
                         panel.add(field);
