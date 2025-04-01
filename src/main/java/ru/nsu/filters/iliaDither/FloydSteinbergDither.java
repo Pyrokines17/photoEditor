@@ -18,7 +18,9 @@ public class FloydSteinbergDither extends Filter {
         int r, g, b;
         int re, ge, be;
 
-        int quants = parameters.getIntParam("quants");
+        int redQuants = parameters.getIntParam("red quants");
+        int greenQuants = parameters.getIntParam("green quants");
+        int blueQuants = parameters.getIntParam("blue quants");
         for (int i = 0; i < newImage.getHeight(); ++i) {
             for (int j = 0; j < newImage.getWidth(); ++j) {
                 int rgb = image.getRGB(j, i);
@@ -31,7 +33,7 @@ public class FloydSteinbergDither extends Filter {
                 ge = g - (int)(g + 0.5);
                 be = b - (int)(b + 0.5);
 
-                newImage.setRGB(j, i, convertBack(nearestColor(r, quants), nearestColor(g, quants), nearestColor(b, quants)));
+                newImage.setRGB(j, i, convertBack(nearestColor(r, redQuants), nearestColor(g, greenQuants), nearestColor(b, blueQuants)));
 
                 propagateError(newImage, j + 1, i, 7 * re / 16, 7 * ge / 16, 7 * be / 16);
                 propagateError(newImage, j - 1, i + 1, 3 * re / 16, 3 * ge / 16, 3 * be / 16);

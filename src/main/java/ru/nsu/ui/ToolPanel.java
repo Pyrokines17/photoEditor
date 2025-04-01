@@ -61,6 +61,7 @@ public class ToolPanel extends JToolBar {
         addFilterButton(FilterList.ROBERTS_HIGHLIGHTING, "RobertsHighlighting");
         addFilterButton(FilterList.FSDITHERING_I, "Floyd-Steinberg dither");
         addFilterButton(FilterList.ORDERED_DITHER_I, "Ordered dither");
+        addFilterButton(FilterList.CRYSTALLIZE, "Crystallize");
     }
 
     private void addFileButton(Runnable onPressAction, String name, String desc) {
@@ -274,6 +275,7 @@ public class ToolPanel extends JToolBar {
                 switch (Parameters.getConstraintType(borders.get(name))) {
                     case BORDERS -> {
                         JTextField field = new JTextField();
+
                         JSlider slider;
 
                         if (type.equals("int")) {
@@ -282,6 +284,7 @@ public class ToolPanel extends JToolBar {
                         else {
                             slider = getDoubleSlider(borders.get(name), field, 0.1);
                         }
+
 
                         if (oldParameters != null) {
                             if (type.equals("int")) {

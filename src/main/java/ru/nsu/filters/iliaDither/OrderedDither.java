@@ -38,25 +38,47 @@ public class OrderedDither extends Filter {
     public BufferedImage apply(BufferedImage image, int x, int y) {
         BufferedImage newImage = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_RGB);
         newImage.setData(image.getData());
+
+
         int r, g, b;
 
-        int quants = parameters.getIntParam("quants");
-        int matrixSize = 8;
-        int threshold = 255 / quants;
+        int redQuants = parameters.getIntParam("red quants");
+        int greenQuants = parameters.getIntParam("green quants");
+        int blueQuants = parameters.getIntParam("blue quants");
+
+        int redMatrixSize = getBestMatrixSize(256, redQuants);
+        int greenMatrixSize = getBestMatrixSize(256, greenQuants);
+        int blueMatrixSize = getBestMatrixSize(256, blueQuants);
+
+        int redThreshold = 255 / redQuants;
+        int greenThreshold = 255 / greenQuants;
+        int blueThreshold = 255 / blueQuants;
         for (int i = 0; i < newImage.getHeight(); ++i) {
             for (int j = 0; j < newImage.getWidth(); ++j) {
                 int rgb = image.getRGB(j, i);
 
-                r = (int) (getRedComponent(rgb) + threshold * applyMatrix(j, i, matrixSize));
-                g = (int) (getGreenComponent(rgb) + threshold * applyMatrix(j, i, matrixSize));
-                b = (int) (getBlueComponent(rgb) + threshold * applyMatrix(j, i, matrixSize));
+                r = (int) (getRedComponent(rgb) + redThreshold * applyMatrix(j, i, redMatrixSize));
+                g = (int) (getGreenComponent(rgb) + greenThreshold * applyMatrix(j, i, greenMatrixSize));
+                b = (int) (getBlueComponent(rgb) + blueThreshold * applyMatrix(j, i, blueMatrixSize));
 
-                newImage.setRGB(j, i, convertBack(nearestColor(r, quants), nearestColor(g, quants), nearestColor(b, quants)));
+                newImage.setRGB(j, i, convertBack(nearestColor(r, redQuants), nearestColor(g, greenQuants), nearestColor(b, blueQuants)));
 
             }
         }
 
         return newImage;
+    }
+
+    private static int getBestMatrixSize(int originalColorsCount, int newColorsCount) {
+        int ratio = originalColorsCount / newColorsCount;
+        if (ratio >= 4) {
+            return 8;
+        } else if (ratio >= 2) {
+            return 4;
+        }
+        else {
+            return 2;
+        }
     }
 
     private double applyMatrix(int j, int i, int matrixSize) {

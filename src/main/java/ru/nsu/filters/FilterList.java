@@ -13,4 +13,5 @@ public enum FilterList {
     ROBERTS_HIGHLIGHTING,
     FSDITHERING_I,
     ORDERED_DITHER_I,
+    CRYSTALLIZE,
 }
