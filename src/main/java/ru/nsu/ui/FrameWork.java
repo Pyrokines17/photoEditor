@@ -21,6 +21,7 @@ public class FrameWork extends JFrame implements ToolPanelEventListener {
     private BufferedImage originalImage = null;
     private BufferedImage filteredImage = null;
 
+    private boolean neededToSave = false;
     private boolean filterApplied = false;
     private final JImagePanel panel;
     private Filter filter;
@@ -59,6 +60,10 @@ public class FrameWork extends JFrame implements ToolPanelEventListener {
 
         pack();
         setVisible(true);
+    }
+
+    public void setNeededToSave(boolean neededToSave) {
+        this.neededToSave = neededToSave;
     }
 
     private ToolPanel getToolPanel(MenuPanel menuPanel) {
@@ -115,10 +120,13 @@ public class FrameWork extends JFrame implements ToolPanelEventListener {
             panel.setImage(originalImage, true);
             filterApplied = false;
         } else {
-            this.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-            filteredImage = filter.apply(originalImage, x, y);
+            if (filteredImage == null || !neededToSave) {
+                this.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+                filteredImage = filter.apply(originalImage, x, y);
+                this.setCursor(Cursor.getDefaultCursor());
+            }
+
             panel.setImage(filteredImage, true);
-            this.setCursor(Cursor.getDefaultCursor());
             filterApplied = true;
         }
     }

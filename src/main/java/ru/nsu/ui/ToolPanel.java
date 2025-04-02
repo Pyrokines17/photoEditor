@@ -137,6 +137,8 @@ public class ToolPanel extends JToolBar {
                 return;
             }
 
+            parent.setNeededToSave(filter != FilterList.CYCLES);
+
             Parameters parameters = FilterSwitch.getParameters(filter);
             HashMap<String, String> types = parameters.getTypes();
             HashMap<String, String> borders = parameters.getBorders();
