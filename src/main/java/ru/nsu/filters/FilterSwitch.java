@@ -28,7 +28,7 @@ public class FilterSwitch {
                 borders.put("sensitivity", "0|255");
                 return new Parameters(types, borders);
             }
-            case FSDITHERING_I, ORDERED_DITHER_I: {
+            case FSDITHERING_I, ORDERED_DITHER_I, FSDITHERING, ORDERED_DITHERING: {
                 HashMap<String, String> types = new HashMap<>();
                 types.put("red quants", "int");
                 types.put("green quants", "int");
@@ -48,7 +48,20 @@ public class FilterSwitch {
                 borders.put("crystal height", "10|100");
                 return new Parameters(types, borders);
             }
-            case NEGATIVE, GRAYSCALE, ORDERED_DITHERING, FSDITHERING, SHARPENING, EMBOSS:
+            case CYCLES: {
+                HashMap<String, String> types = new HashMap<>();
+                types.put("radius", "int");
+                types.put("amplitude", "double");
+                types.put("wavelength", "double");
+                types.put("phase", "double");
+                HashMap<String, String> borders = new HashMap<>();
+                borders.put("radius", "1|300");
+                borders.put("amplitude", "0.1|100.0");
+                borders.put("wavelength", "0.1|100.0");
+                borders.put("phase", "0.1|100.0");
+                return new Parameters(types, borders);
+            }
+            case NEGATIVE, GRAYSCALE, SHARPENING, EMBOSS, AQUA:
             default:
                 return new Parameters(null, null);
         }
@@ -69,6 +82,8 @@ public class FilterSwitch {
             case FSDITHERING_I -> new FloydSteinbergDither(parameters);
             case ORDERED_DITHER_I -> new ru.nsu.filters.iliaDither.OrderedDither(parameters);
             case CRYSTALLIZE -> new Crystallize(parameters);
+            case CYCLES -> new Cycles(parameters);
+            case AQUA -> new Aqua(parameters);
         };
     }
 }

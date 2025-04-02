@@ -14,4 +14,6 @@ public enum FilterList {
     FSDITHERING_I,
     ORDERED_DITHER_I,
     CRYSTALLIZE,
+    CYCLES,
+    AQUA,
 }
