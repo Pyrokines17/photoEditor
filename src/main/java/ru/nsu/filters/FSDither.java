@@ -7,80 +7,120 @@ public class FSDither extends Filter {
         super(parameters);
     }
 
+    private final static int[] matrix = {
+            0, 0, 0,
+            0, 0, 7,
+            3, 5, 1
+    };
+
     @Override
     public BufferedImage apply(BufferedImage image, int x, int y) {
         BufferedImage newImage = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_RGB);
-        int w = image.getWidth(); int h = image.getHeight();
+        int width = image.getWidth(); int height = image.getHeight();
 
-        float[] red = new float[w*h];
-        float[] green = new float[w*h];
-        float[] blue = new float[w*h];
-
-        for (int i = 0; i < h; ++i) {
-            for (int j = 0; j < w; ++j) {
-                int rgb = image.getRGB(j, i);
-                red[i*w + j] = getRedComponent(rgb);
-                green[i*w + j] = getGreenComponent(rgb);
-                blue[i*w + j] = getBlueComponent(rgb);
-            }
-        }
-
-        float redStep = 255.0f / (parameters.getIntParam("red quants") - 1);
-        float greenStep = 255.0f / (parameters.getIntParam("green quants") - 1);
-        float blueStep = 255.0f / (parameters.getIntParam("blue quants") - 1);
-
-        for (int i = 0; i < h; ++i) {
-            for (int j = 0; j < w; ++j) {
-                int index = i*w + j;
-
-                float oldRed = red[index];
-                float oldGreen = green[index];
-                float oldBlue = blue[index];
-
-                int newRed = findClosestColor(oldRed, redStep);
-                int newGreen = findClosestColor(oldGreen, greenStep);
-                int newBlue = findClosestColor(oldBlue, blueStep);
-
-                newRed = Math.min(255, Math.max(0, newRed));
-                newGreen = Math.min(255, Math.max(0, newGreen));
-                newBlue = Math.min(255, Math.max(0, newBlue));
-
-                newImage.setRGB(j, i, convertBack(newRed, newGreen, newBlue));
-
-                float errorRed = oldRed - newRed;
-                float errorGreen = oldGreen - newGreen;
-                float errorBlue = oldBlue - newBlue;
-
-                if (j + 1 < w) {
-                    red[index + 1] += errorRed * 7 / 16;
-                    green[index + 1] += errorGreen * 7 / 16;
-                    blue[index + 1] += errorBlue * 7 / 16;
-                }
-
-                if (i + 1 < h) {
-                    if (j - 1 >= 0) {
-                        red[index + w - 1] += errorRed * 3 / 16;
-                        green[index + w - 1] += errorGreen * 3 / 16;
-                        blue[index + w - 1] += errorBlue * 3 / 16;
-                    }
-
-                    red[index + w] += errorRed * 5 / 16;
-                    green[index + w] += errorGreen * 5 / 16;
-                    blue[index + w] += errorBlue * 5 / 16;
-
-                    if (j + 1 < w) {
-                        red[index + w + 1] += errorRed * 1 / 16;
-                        green[index + w + 1] += errorGreen * 1 / 16;
-                        blue[index + w + 1] += errorBlue * 1 / 16;
-                    }
-                }
-            }
-        }
+        int[] inPixels = getRGB(image, 0, 0, width, height, null);
+        inPixels = filterPixels(width, height, inPixels);
+        setRGB(newImage, 0, 0, width, height, inPixels);
 
         return newImage;
     }
 
-    private int findClosestColor(float color, float step) {
-        return Math.round(color/step) * (int)step;
+    private int[] filterPixels(int width, int height, int[] inPixels) {
+        int[] outPixels = new int[width * height];
+        int index;
+
+        int redLevels = parameters.getIntParam("red quants");
+        int greenLevels = parameters.getIntParam("green quants");
+        int blueLevels = parameters.getIntParam("blue quants");
+
+        int[] redMap = getColorMap(redLevels);
+        int[] greenMap = getColorMap(greenLevels);
+        int[] blueMap = getColorMap(blueLevels);
+
+        int[] redDiv = getColorDiv(redLevels);
+        int[] greenDiv = getColorDiv(greenLevels);
+        int[] blueDiv = getColorDiv(blueLevels);
+
+        for (int y = 0; y < height; ++y) {
+            int direction = 1;
+            index = y*width;
+
+            for (int x = 0; x < width; ++x) {
+                int rgb1 = inPixels[index];
+
+                int r1 = (rgb1 >> 16) & 0xff;
+                int g1 = (rgb1 >> 8) & 0xff;
+                int b1 = rgb1 & 0xff;
+
+                int r2 = redMap[redDiv[r1]];
+                int g2 = greenMap[greenDiv[g1]];
+                int b2 = blueMap[blueDiv[b1]];
+
+                outPixels[index] = (rgb1 & 0xff000000) | (r2 << 16) | (g2 << 8) | b2;
+
+                int er = r1-r2;
+                int eg = g1-g2;
+                int eb = b1-b2;
+
+                for (int i = -1; i <= 1; ++i) {
+                    int iy = i+y;
+
+                    if (0 <= iy && iy < height) {
+                        for (int j = -1; j <= 1; ++j) {
+                            int jx = j+x;
+
+                            if (0 <= jx && jx < width) {
+                                int w = matrix[(i+1)*3+j+1];
+
+                                if (w != 0) {
+                                    int k = index + j;
+
+                                    rgb1 = inPixels[k];
+
+                                    r1 = (rgb1 >> 16) & 0xff;
+                                    g1 = (rgb1 >> 8) & 0xff;
+                                    b1 = rgb1 & 0xff;
+
+                                    r1 += er * w/16;
+                                    g1 += eg * w/16;
+                                    b1 += eb * w/16;
+
+                                    inPixels[k] = (inPixels[k] & 0xff000000) | (clamp(r1) << 16) | (clamp(g1) << 8) | clamp(b1);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                index += direction;
+            }
+        }
+
+        return outPixels;
+    }
+
+    private int[] getColorMap(int levels) {
+        int[] map = new int[levels];
+
+        for (int i = 0; i < levels; ++i) {
+            int v = 255 * i / (levels - 1);
+            map[i] = v;
+        }
+
+        return map;
+    }
+
+    private int[] getColorDiv(int levels) {
+        int[] map = new int[256];
+
+        for (int i = 0; i < 256; ++i) {
+            map[i] = levels * i / 256;
+        }
+
+        return map;
+    }
+
+    private int clamp(int value) {
+        return Math.max(0, Math.min(value, 255));
     }
 }
