@@ -307,6 +307,14 @@ public class ToolPanel extends JToolBar {
                         JComboBox<String> dropdown = new JComboBox<>(options);
                         panel.add(dropdown);
                         fields.put(name, dropdown);
+
+                        if (oldParameters != null) {
+                            if (type.equals("int")) {
+                                dropdown.setSelectedItem(Integer.toString(oldParameters.getIntParam(name)));
+                            } else {
+                                dropdown.setSelectedItem(Double.toString(oldParameters.getDoubleParam(name)));
+                            }
+                        }
                     }
                 }
             }
@@ -329,7 +337,7 @@ public class ToolPanel extends JToolBar {
         slider.setMinorTickSpacing(1);
         slider.setPaintTicks(true);
 
-        DecimalFormat format = new DecimalFormat("#.00", new DecimalFormatSymbols(Locale.US));
+        DecimalFormat format = new DecimalFormat("0.00", new DecimalFormatSymbols(Locale.US));
 
         slider.addChangeListener(e -> {
             double value = slider.getValue() * step;
