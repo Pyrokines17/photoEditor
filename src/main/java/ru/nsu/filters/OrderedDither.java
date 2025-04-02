@@ -95,32 +95,35 @@ public class OrderedDither extends Filter {
     }
 
     private int[] getBestMatrix(int quants) {
-        if (quants <= 4) {
-            return DITHER_MATRIX_2;
-        } else if (quants <= 16) {
+        int k = 256 / quants;
+        if (k >= 4) {
+            return DITHER_MATRIX_8;
+        } else if (k >= 2) {
             return DITHER_MATRIX_4;
         } else {
-            return DITHER_MATRIX_8;
+            return DITHER_MATRIX_2;
         }
     }
 
     private int getBestMatrixSize(int quants) {
-        if (quants <= 4) {
-            return 2;
-        } else if (quants <= 16) {
+        int k = 256 / quants;
+        if (k >= 4) {
+            return 8;
+        } else if (k >= 2) {
             return 4;
         } else {
-            return 8;
+            return 2;
         }
     }
 
     private float getBestScale(int quants) {
-        if (quants <= 4) {
-            return SCALE_2;
-        } else if (quants <= 16) {
+        int k = 256 / quants;
+        if (k >= 4) {
+            return SCALE_8;
+        } else if (k >= 2) {
             return SCALE_4;
         } else {
-            return SCALE_8;
+            return SCALE_2;
         }
     }
 }
