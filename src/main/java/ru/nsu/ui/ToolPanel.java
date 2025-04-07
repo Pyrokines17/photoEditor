@@ -45,7 +45,7 @@ public class ToolPanel extends JToolBar {
 
         addFileButton(() -> parent.onEvent(ToolPanelEventListener.EventType.FIT_SCREEN_BUTTON_CLICKED), "Fit", "Fit image to screen");
         addFileButton(() -> parent.onEvent(ToolPanelEventListener.EventType.REAL_SIZE_BUTTON_CLICKED), "Real", "Show image in real size");
-
+        menuPanel.addSeparator();
         addFileButton(getLoadAct(), "Open", "Open image");
         addFileButton(getSaveAct(), "Save", "Save image");
 

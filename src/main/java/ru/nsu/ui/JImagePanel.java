@@ -1,5 +1,8 @@
 package ru.nsu.ui;
 
+import ru.nsu.filters.scales.Bilinear;
+import ru.nsu.filters.scales.NearestNeighbor;
+
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -34,8 +37,11 @@ public class JImagePanel extends JPanel implements MouseListener, MouseMotionLis
     private Dimension panelSize;    // visible image size
     private BufferedImage image;    // image to view
     private Dimension imageSize;    // real image size
+    private BufferedImage originalImage; // original image
+    private Dimension originalImageSize; // original image size
 
     private Point lastViewPoint = null;
+    private Scale scale = Scale.BILINEAR; // scale of the image
 
     private int lastX = 0, lastY = 0;        // last captured mouse coordinates
 
@@ -70,6 +76,11 @@ public class JImagePanel extends JPanel implements MouseListener, MouseMotionLis
         return imageScrollPane;
     }
 
+    public void setOriginalImage(BufferedImage originalImage) {
+        this.originalImage = originalImage;
+        this.originalImageSize = new Dimension(originalImage.getWidth(), originalImage.getHeight());
+    }
+
     /**
      * Creates new Image-viewer of the given image in the given JScrollPane
      *
@@ -91,6 +102,10 @@ public class JImagePanel extends JPanel implements MouseListener, MouseMotionLis
         } else {
             g.drawImage(image, 0, 0, panelSize.width, panelSize.height, null);
         }
+    }
+
+    public void setScale(Scale scale) {
+        this.scale = scale;
     }
 
     public BufferedImage getCurrentImage() {
@@ -155,6 +170,16 @@ public class JImagePanel extends JPanel implements MouseListener, MouseMotionLis
      * Sets "fit-screen" view.
      */
     public void fitScreen() {
+        if (scale == Scale.COMMON) {
+            commonResize();
+        } else if (scale == Scale.NEAREST_NEIGHBOR) {
+            nearestNeighborResize();
+        } else if (scale == Scale.BILINEAR) {
+            bilinearResize();
+        }
+    }
+
+    private void commonResize() {
         setMaxVisibleRectSize();
 
         double kh = (double) imageSize.height / panelSize.height;
@@ -170,6 +195,54 @@ public class JImagePanel extends JPanel implements MouseListener, MouseMotionLis
         imageScrollPane.getViewport().setViewPosition(new Point(0, 0));
         revalidate();
         imageScrollPane.repaint();    // wipe off the old picture in "spare" space
+        imageScrollPane.revalidate();
+    }
+
+    private void nearestNeighborResize() {
+        if (image == null) {
+            return;
+        }
+
+        double scaleX = (double) getVisibleRectSize().width / imageSize.width;
+        double scaleY = (double) getVisibleRectSize().height / imageSize.height;
+        double scale = Math.min(scaleX, scaleY);
+
+        int newWidth = (int) (imageSize.width * scale);
+        int newHeight = (int) (imageSize.height * scale);
+
+        BufferedImage resizedImage = NearestNeighbor.resize(image, newWidth, newHeight);
+
+        panelSize.setSize(newWidth, newHeight);
+        image = resizedImage;
+
+        this.setPreferredSize(panelSize);
+        revalidate();
+        repaint();
+        imageScrollPane.repaint();
+        imageScrollPane.revalidate();
+    }
+
+    private void bilinearResize() {
+        if (image == null) {
+            return;
+        }
+
+        double scaleX = (double) getVisibleRectSize().width / imageSize.width;
+        double scaleY = (double) getVisibleRectSize().height / imageSize.height;
+        double scale = Math.min(scaleX, scaleY);
+
+        int newWidth = (int) (imageSize.width * scale);
+        int newHeight = (int) (imageSize.height * scale);
+
+        BufferedImage resizedImage = Bilinear.resize(image, newWidth, newHeight);
+
+        panelSize.setSize(newWidth, newHeight);
+        image = resizedImage;
+
+        this.setPreferredSize(panelSize);
+        revalidate();
+        repaint();
+        imageScrollPane.repaint();
         imageScrollPane.revalidate();
     }
 

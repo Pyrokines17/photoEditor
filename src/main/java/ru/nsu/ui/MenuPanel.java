@@ -15,6 +15,8 @@ import java.util.function.BiConsumer;
 public class MenuPanel extends JMenuBar {
     private final ButtonGroup radioGroup = new ButtonGroup();
     private final List<JRadioButtonMenuItem> radioButtons = new ArrayList<>();
+    private final ButtonGroup typesGroup = new ButtonGroup();
+    private final List<JRadioButtonMenuItem> typesButtons = new ArrayList<>();
 
     private final Parser parser = Parser.builder().build();
     private final HtmlRenderer renderer = HtmlRenderer.builder().build();
@@ -22,8 +24,12 @@ public class MenuPanel extends JMenuBar {
     private final JMenu fileMenu;
     private final JMenu filtersMenu;
 
+    private final JImagePanel imagePanel;
+
     public MenuPanel(FrameWork parent) {
         super();
+
+        imagePanel = parent.getPanel();
 
         fileMenu = new JMenu("File");
         JMenuItem exitItem = new JMenuItem("Exit");
@@ -31,6 +37,9 @@ public class MenuPanel extends JMenuBar {
         exitItem.addActionListener(e -> System.exit(0));
         fileMenu.add(exitItem);
 
+        fileMenu.addSeparator();
+
+        addScaleTypes();
         fileMenu.addSeparator();
 
         filtersMenu = new JMenu("Filters");
@@ -47,6 +56,28 @@ public class MenuPanel extends JMenuBar {
         add(fileMenu);
         add(filtersMenu);
         add(helpMenu);
+    }
+
+    public void addSeparator() {
+        fileMenu.addSeparator();
+    }
+
+    public void addScaleTypes() {
+        String[] types = {"Common", "Nearest Neighbor", "Bilinear"};
+
+        for (String type : types) {
+            JRadioButtonMenuItem radioButton = new JRadioButtonMenuItem(type);
+            typesGroup.add(radioButton);
+            typesButtons.add(radioButton);
+            fileMenu.add(radioButton);
+            radioButton.setToolTipText("Apply " + type.toLowerCase() + " scaling");
+        }
+
+        typesButtons.get(0).addActionListener((event) -> imagePanel.setScale(Scale.COMMON));
+        typesButtons.get(1).addActionListener((event) -> imagePanel.setScale(Scale.NEAREST_NEIGHBOR));
+        typesButtons.get(2).addActionListener((event) -> imagePanel.setScale(Scale.BILINEAR));
+
+        typesButtons.get(2).setSelected(true);
     }
 
     public void addRadioButton(FilterList filter, String name, ToolPanel toolPanel, BiConsumer<FilterList, Integer> filterAction) {

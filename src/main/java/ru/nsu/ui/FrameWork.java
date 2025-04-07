@@ -66,6 +66,10 @@ public class FrameWork extends JFrame implements ToolPanelEventListener {
         this.neededToSave = neededToSave;
     }
 
+    public JImagePanel getPanel() {
+        return panel;
+    }
+
     private ToolPanel getToolPanel(MenuPanel menuPanel) {
         ToolPanel toolPanel = new ToolPanel(this, menuPanel);
 
@@ -88,6 +92,7 @@ public class FrameWork extends JFrame implements ToolPanelEventListener {
             try {
                 originalImage = ImageIO.read(file);
                 panel.setImage(originalImage, false);
+                panel.setOriginalImage(originalImage);
                 panel.realSize();
                 delFiltered();
             } catch (IOException e) {
