@@ -64,6 +64,7 @@ public class ToolPanel extends JToolBar {
         addFilterButton(FilterList.CRYSTALLIZE, "Crystallize");
         addFilterButton(FilterList.CYCLES, "Cycles");
         addFilterButton(FilterList.AQUA, "Aqua");
+        addFilterButton(FilterList.ROTATE, "Rotate");
     }
 
     private void addFileButton(Runnable onPressAction, String name, String desc) {

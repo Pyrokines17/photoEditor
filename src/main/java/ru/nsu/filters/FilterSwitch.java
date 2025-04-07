@@ -61,6 +61,13 @@ public class FilterSwitch {
                 borders.put("phase", "0.1|100.0");
                 return new Parameters(types, borders);
             }
+            case ROTATE: {
+                HashMap<String, String> types = new HashMap<>();
+                types.put("angle", "double");
+                HashMap<String, String> borders = new HashMap<>();
+                borders.put("angle", "-180.0|180.0");
+                return new Parameters(types, borders);
+            }
             case NEGATIVE, GRAYSCALE, SHARPENING, EMBOSS, AQUA:
             default:
                 return new Parameters(null, null);
@@ -84,6 +91,7 @@ public class FilterSwitch {
             case CRYSTALLIZE -> new Crystallize(parameters);
             case CYCLES -> new Cycles(parameters);
             case AQUA -> new Aqua(parameters);
+            case ROTATE -> new Rotate(parameters);
         };
     }
 }

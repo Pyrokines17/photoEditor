@@ -16,4 +16,5 @@ public enum FilterList {
     CRYSTALLIZE,
     CYCLES,
     AQUA,
+    ROTATE,
 }
