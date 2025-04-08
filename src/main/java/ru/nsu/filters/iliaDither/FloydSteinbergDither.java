@@ -15,7 +15,7 @@ public class FloydSteinbergDither extends Filter {
     public BufferedImage apply(BufferedImage image, int x, int y) {
         BufferedImage newImage = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_RGB);
 
-        double r, g, b;
+        double r_in, g_in, b_in, r_out, g_out, b_out;
         double re, ge, be;
 
         int imageSize = image.getWidth() * image.getHeight();
@@ -32,16 +32,19 @@ public class FloydSteinbergDither extends Filter {
 
                 rgb = getImageRGB(image, j, i);
 
-                r = redError[j + i * image.getWidth()] + getRedComponent(rgb);
-                g = greenError[j + i * image.getWidth()] + getGreenComponent(rgb);
-                b = blueError[j + i * image.getWidth()] + getBlueComponent(rgb);
+                r_in = (int) Math.round(redError[j + i * image.getWidth()] + getRedComponent(rgb));
+                g_in = (int) Math.round(greenError[j + i * image.getWidth()] + getGreenComponent(rgb));
+                b_in = (int) Math.round(blueError[j + i * image.getWidth()] + getBlueComponent(rgb));
 
-                re = r - (int)(r + 0.5);
-                ge = g - (int)(g + 0.5);
-                be = b - (int)(b + 0.5);
+                r_out = nearestColor((int) r_in, redQuants);
+                g_out = nearestColor((int) g_in, greenQuants);
+                b_out = nearestColor((int) b_in, blueQuants);
 
-                newImage.setRGB(j, i, convertBack(nearestColor((int) Math.round(r), redQuants),
-                        nearestColor((int) Math.round(g), greenQuants), nearestColor((int) Math.round(b), blueQuants)));
+                re = r_in - r_out;
+                ge = g_in - g_out;
+                be = b_in - b_out;
+
+                newImage.setRGB(j, i, convertBack(r_out, g_out, b_out));
 
                 propagateError(redError, greenError, blueError, j + 1, i, 7 * re / 16, 7 * ge / 16, 7 * be / 16, image.getWidth(), image.getHeight());
                 propagateError(redError, greenError, blueError, j - 1, i + 1, 3 * re / 16, 3 * ge / 16, 3 * be / 16, image.getWidth(), image.getHeight());
