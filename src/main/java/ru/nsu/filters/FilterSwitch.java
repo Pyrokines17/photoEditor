@@ -16,8 +16,10 @@ public class FilterSwitch {
             }
             case GAUSSIAN_FILTER: {
                 HashMap<String, String> types = new HashMap<>();
+                types.put("sigma", "double");
                 types.put("window size", "int");
                 HashMap<String, String> borders = new HashMap<>();
+                borders.put("sigma", "0.5|10.0");
                 borders.put("window size", "3,5,7,9,11");
                 return new Parameters(types, borders);
             }

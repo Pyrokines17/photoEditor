@@ -1,7 +1,6 @@
 package ru.nsu.filters;
 
 import java.awt.image.BufferedImage;
-import java.util.HashMap;
 
 public class GaussianFilter extends MatrixFilter {
 
@@ -9,28 +8,20 @@ public class GaussianFilter extends MatrixFilter {
         super(parameters);
     }
 
-    private static final HashMap<Integer, FilterMatrix> kernelCache = new HashMap<>();
-
     @Override
     public BufferedImage apply(BufferedImage image, int x, int y) {
-        return apply(image, getMatrix(parameters.getIntParam("window size")));
+        return apply(image, getMatrix(parameters.getIntParam("window size"), parameters.getDoubleParam("sigma")));
     }
 
-    private FilterMatrix getMatrix(int windowSize) {
-        if (kernelCache.containsKey(windowSize)) {
-            return kernelCache.get(windowSize);
-        }
-        FilterMatrix generated = generate(windowSize);
-        kernelCache.put(windowSize, generated);
-        return generated;
+    private FilterMatrix getMatrix(int windowSize, double sigma) {
+        return generate(windowSize, sigma);
     }
 
-    private FilterMatrix generate(int size) {
+    private FilterMatrix generate(int size, double sigma) {
         if (size % 2 == 0) {
             throw new IllegalArgumentException("Size must be odd.");
         }
 
-        double sigma = 1.0;
         double[] kernel = new double[size * size];
         int mean = size / 2;
         for (int i = 0; i < size; ++i) {
