@@ -33,13 +33,9 @@ public class FSDither extends Filter {
         int greenLevels = parameters.getIntParam("green quants");
         int blueLevels = parameters.getIntParam("blue quants");
 
-        int[] redMap = getColorMap(redLevels);
-        int[] greenMap = getColorMap(greenLevels);
-        int[] blueMap = getColorMap(blueLevels);
-
-        int[] redDiv = getColorDiv(redLevels);
-        int[] greenDiv = getColorDiv(greenLevels);
-        int[] blueDiv = getColorDiv(blueLevels);
+        double[] redError = new double[width * height];
+        double[] greenError = new double[width * height];
+        double[] blueError = new double[width * height];
 
         for (int y = 0; y < height; ++y) {
             int direction = 1;
@@ -52,15 +48,19 @@ public class FSDither extends Filter {
                 int g1 = (rgb1 >> 8) & 0xff;
                 int b1 = rgb1 & 0xff;
 
-                int r2 = redMap[redDiv[r1]];
-                int g2 = greenMap[greenDiv[g1]];
-                int b2 = blueMap[blueDiv[b1]];
+                int r2 = (int) Math.round(redError[index] + r1);
+                int g2 = (int) Math.round(greenError[index] + g1);
+                int b2 = (int) Math.round(blueError[index] + b1);
 
-                outPixels[index] = (rgb1 & 0xff000000) | (r2 << 16) | (g2 << 8) | b2;
+                int r_fin = nearestColor(r2, redLevels);
+                int g_fin = nearestColor(g2, greenLevels);
+                int b_fin = nearestColor(b2, blueLevels);
 
-                int er = r1-r2;
-                int eg = g1-g2;
-                int eb = b1-b2;
+                outPixels[index] = (rgb1 & 0xff000000) | (r_fin << 16) | (g_fin << 8) | b_fin;
+
+                double er = r2 - r_fin;
+                double eg = g2 - g_fin;
+                double eb = b2 - b_fin;
 
                 for (int i = -1; i <= 1; ++i) {
                     int iy = i+y;
@@ -70,22 +70,14 @@ public class FSDither extends Filter {
                             int jx = j+x;
 
                             if (0 <= jx && jx < width) {
-                                int w = matrix[(i+1)*3+j+1];
+                                double w = matrix[(i+1)*3+j+1];
 
                                 if (w != 0) {
-                                    int k = index + j;
+                                    int k = index + j + i*width;
 
-                                    rgb1 = inPixels[k];
-
-                                    r1 = (rgb1 >> 16) & 0xff;
-                                    g1 = (rgb1 >> 8) & 0xff;
-                                    b1 = rgb1 & 0xff;
-
-                                    r1 += er * w/16;
-                                    g1 += eg * w/16;
-                                    b1 += eb * w/16;
-
-                                    inPixels[k] = (inPixels[k] & 0xff000000) | (clamp(r1) << 16) | (clamp(g1) << 8) | clamp(b1);
+                                    redError[k] += er * w/16;
+                                    greenError[k] += eg * w/16;
+                                    blueError[k] += eb * w/16;
                                 }
                             }
                         }
@@ -99,28 +91,9 @@ public class FSDither extends Filter {
         return outPixels;
     }
 
-    private int[] getColorMap(int levels) {
-        int[] map = new int[levels];
-
-        for (int i = 0; i < levels; ++i) {
-            int v = 255 * i / (levels - 1);
-            map[i] = v;
-        }
-
-        return map;
-    }
-
-    private int[] getColorDiv(int levels) {
-        int[] map = new int[256];
-
-        for (int i = 0; i < 256; ++i) {
-            map[i] = levels * i / 256;
-        }
-
-        return map;
-    }
-
-    private int clamp(int value) {
-        return Math.max(0, Math.min(value, 255));
+    private int nearestColor(int val, int quants) {
+        int buf = Math.min(255, Math.max(0, val));
+        int step = 255 / quants;
+        return step * (int) Math.round((double) buf / step);
     }
 }
