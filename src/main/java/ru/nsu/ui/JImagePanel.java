@@ -38,7 +38,7 @@ public class JImagePanel extends JPanel implements MouseListener, MouseMotionLis
     private BufferedImage image;    // image to view
     private Dimension imageSize;    // real image size
     private BufferedImage originalImage; // original image
-    private Dimension originalImageSize; // original image size
+    private Dimension oldImageSize; // original image size
 
     private Point lastViewPoint = null;
     private Scale scale = Scale.BILINEAR; // scale of the image
@@ -78,7 +78,6 @@ public class JImagePanel extends JPanel implements MouseListener, MouseMotionLis
 
     public void setOriginalImage(BufferedImage originalImage) {
         this.originalImage = originalImage;
-        this.originalImageSize = new Dimension(originalImage.getWidth(), originalImage.getHeight());
     }
 
     /**
@@ -166,6 +165,10 @@ public class JImagePanel extends JPanel implements MouseListener, MouseMotionLis
         return previousVisibleRect != null && (newImSize.height == imageSize.height) || (newImSize.width == imageSize.width);
     }
 
+    public void setOldImageSize(Dimension oldImageSize) {
+        this.oldImageSize = oldImageSize;
+    }
+
     /**
      * Sets "fit-screen" view.
      */
@@ -214,6 +217,25 @@ public class JImagePanel extends JPanel implements MouseListener, MouseMotionLis
 
         panelSize.setSize(newWidth, newHeight);
         image = resizedImage;
+        imageSize = new Dimension(newWidth, newHeight);
+
+        boolean filterApplied = parentComponent.getFilterApplied();
+        BufferedImage filteredImage = parentComponent.getFilteredImage();
+
+        if (!filterApplied) {
+            parentComponent.setOriginalImage(resizedImage);
+            originalImage = resizedImage;
+
+            if (filteredImage != null) {
+                BufferedImage resizedFilteredImage = NearestNeighbor.resize(filteredImage, newWidth, newHeight);
+                parentComponent.setFilteredImage(resizedFilteredImage);
+            }
+        } else {
+            parentComponent.setFilteredImage(resizedImage);
+            BufferedImage resizedOriginalImage = NearestNeighbor.resize(originalImage, newWidth, newHeight);
+            parentComponent.setOriginalImage(resizedOriginalImage);
+            originalImage = resizedOriginalImage;
+        }
 
         this.setPreferredSize(panelSize);
         revalidate();
@@ -238,6 +260,25 @@ public class JImagePanel extends JPanel implements MouseListener, MouseMotionLis
 
         panelSize.setSize(newWidth, newHeight);
         image = resizedImage;
+        imageSize = new Dimension(newWidth, newHeight);
+
+        boolean filterApplied = parentComponent.getFilterApplied();
+        BufferedImage filteredImage = parentComponent.getFilteredImage();
+
+        if (!filterApplied) {
+            parentComponent.setOriginalImage(resizedImage);
+            originalImage = resizedImage;
+
+            if (filteredImage != null) {
+                BufferedImage resizedFilteredImage = Bilinear.resize(filteredImage, newWidth, newHeight);
+                parentComponent.setFilteredImage(resizedFilteredImage);
+            }
+        } else {
+            parentComponent.setFilteredImage(resizedImage);
+            BufferedImage resizedOriginalImage = Bilinear.resize(originalImage, newWidth, newHeight);
+            parentComponent.setOriginalImage(resizedOriginalImage);
+            originalImage = resizedOriginalImage;
+        }
 
         this.setPreferredSize(panelSize);
         revalidate();
@@ -253,6 +294,14 @@ public class JImagePanel extends JPanel implements MouseListener, MouseMotionLis
         if (imageSize == null)
             return;
 
+        if (oldImageSize.width != imageSize.width || oldImageSize.height != imageSize.height) {
+            if (scale == Scale.NEAREST_NEIGHBOR) {
+                applyNearestNeighborScale(oldImageSize.width, oldImageSize.height);
+            } else if (scale == Scale.BILINEAR) {
+                applyBilinearScale(oldImageSize.width, oldImageSize.height);
+            }
+        }
+
         double k = (double) imageSize.width / panelSize.width;
         Point scroll = imageScrollPane.getViewport().getViewPosition();
         scroll.x *= (int) k;
@@ -264,6 +313,68 @@ public class JImagePanel extends JPanel implements MouseListener, MouseMotionLis
         imageScrollPane.getHorizontalScrollBar().setValue(scroll.x);
         imageScrollPane.getVerticalScrollBar().setValue(scroll.y);
         imageScrollPane.paintAll(imageScrollPane.getGraphics());
+    }
+
+    private void applyNearestNeighborScale(int width, int height) {
+        BufferedImage resizedImage = NearestNeighbor.resize(image, width, height);
+
+        image = resizedImage;
+        imageSize = new Dimension(width, height);
+
+        boolean filterApplied = parentComponent.getFilterApplied();
+        BufferedImage filteredImage = parentComponent.getFilteredImage();
+
+        if (!filterApplied) {
+            parentComponent.setOriginalImage(resizedImage);
+            originalImage = resizedImage;
+
+            if (filteredImage != null) {
+                BufferedImage resizedFilteredImage = NearestNeighbor.resize(filteredImage, width, height);
+                parentComponent.setFilteredImage(resizedFilteredImage);
+            }
+        } else {
+            parentComponent.setFilteredImage(resizedImage);
+            BufferedImage resizedOriginalImage = NearestNeighbor.resize(originalImage, width, height);
+            parentComponent.setOriginalImage(resizedOriginalImage);
+            originalImage = resizedOriginalImage;
+        }
+
+        this.setPreferredSize(panelSize);
+        revalidate();
+        repaint();
+        imageScrollPane.repaint();
+        imageScrollPane.revalidate();
+    }
+
+    private void applyBilinearScale(int width, int height) {
+        BufferedImage resizedImage = Bilinear.resize(image, width, height);
+
+        image = resizedImage;
+        imageSize = new Dimension(width, height);
+
+        boolean filterApplied = parentComponent.getFilterApplied();
+        BufferedImage filteredImage = parentComponent.getFilteredImage();
+
+        if (!filterApplied) {
+            parentComponent.setOriginalImage(resizedImage);
+            originalImage = resizedImage;
+
+            if (filteredImage != null) {
+                BufferedImage resizedFilteredImage = Bilinear.resize(filteredImage, width, height);
+                parentComponent.setFilteredImage(resizedFilteredImage);
+            }
+        } else {
+            parentComponent.setFilteredImage(resizedImage);
+            BufferedImage resizedOriginalImage = Bilinear.resize(originalImage, width, height);
+            parentComponent.setOriginalImage(resizedOriginalImage);
+            originalImage = resizedOriginalImage;
+        }
+
+        this.setPreferredSize(panelSize);
+        revalidate();
+        repaint();
+        imageScrollPane.repaint();
+        imageScrollPane.revalidate();
     }
 
     /**

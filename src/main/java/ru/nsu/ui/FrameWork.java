@@ -93,6 +93,7 @@ public class FrameWork extends JFrame implements ToolPanelEventListener {
                 originalImage = ImageIO.read(file);
                 panel.setImage(originalImage, false);
                 panel.setOriginalImage(originalImage);
+                panel.setOldImageSize(new Dimension(originalImage.getWidth(), originalImage.getHeight()));
                 panel.realSize();
                 delFiltered();
             } catch (IOException e) {
@@ -147,6 +148,22 @@ public class FrameWork extends JFrame implements ToolPanelEventListener {
         }
 
         filteredImage = null;
+    }
+
+    void setFilteredImage(BufferedImage image) {
+        this.filteredImage = image;
+    }
+
+    BufferedImage getFilteredImage() {
+        return filteredImage;
+    }
+
+    public void setOriginalImage(BufferedImage image) {
+        this.originalImage = image;
+    }
+
+    public boolean getFilterApplied() {
+        return filterApplied;
     }
 
     private BasicStroke getDashedStroke() {
